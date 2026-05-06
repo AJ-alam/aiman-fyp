@@ -1,0 +1,69 @@
+const express = require("express");
+const router = express.Router();
+
+const Agent = require("../models/Agent");
+const protect = require("../middleware/auth.middleware");
+const role = require("../middleware/role.middleware");
+
+// =============== GET ALL AGENTS ===============
+router.get("/agents", protect, role("OWNER"), async (req, res) => {
+  try {
+    console.log("📋 [ADMIN] Fetching all agents...");
+    const agents = await Agent.find().select("-password");
+    
+    console.log(`✅ [ADMIN] Found ${agents.length} agents`);
+    res.json({
+      success: true,
+      agents,
+      message: "Agents retrieved successfully"
+    });
+  } catch (error) {
+    console.error("❌ [ADMIN] Error fetching agents:", error.message);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch agents",
+      error: error.message
+    });
+  }
+});
+
+// =============== APPROVE AGENT ===============
+router.patch("/approve-agent/:id", protect, role("OWNER"), async (req, res) => {
+  try {
+    console.log(`🔄 [ADMIN] Approving agent: ${req.params.id}`);
+    
+    const agent = await Agent.findById(req.params.id);
+
+    if (!agent) {
+      console.warn(`⚠️ [ADMIN] Agent not found: ${req.params.id}`);
+      return res.status(404).json({
+        success: false,
+        message: "Agent not found"
+      });
+    }
+
+    agent.status = "APPROVED";
+    await agent.save();
+
+    console.log(`✅ [ADMIN] Agent approved successfully: ${agent._id}`);
+    res.json({
+      success: true,
+      message: "Agent approved successfully",
+      agent: {
+        _id: agent._id,
+        email: agent.email,
+        name: agent.name,
+        status: agent.status
+      }
+    });
+  } catch (error) {
+    console.error("❌ [ADMIN] Error approving agent:", error.message);
+    res.status(500).json({
+      success: false,
+      message: "Failed to approve agent",
+      error: error.message
+    });
+  }
+});
+
+module.exports = router;
