@@ -1,0 +1,289 @@
+﻿{
+    "runAt":  "2026-04-25T11:12:19",
+    "baseUrl":  "http://localhost:5000",
+    "apiBase":  "http://localhost:5000/api",
+    "compatApiBase":  "http://localhost:5000/api/api",
+    "counts":  {
+                   "skip":  2,
+                   "pass":  37,
+                   "fail":  0
+               },
+    "failedTests":  [
+
+                    ],
+    "results":  [
+                    {
+                        "TestName":  "A1 Health GET /",
+                        "Status":  "PASS",
+                        "HTTP":  200,
+                        "Message":  "Health endpoint reachable.",
+                        "Evidence":  "{\"success\":true,\"message\":\"Agentra API Running\"}"
+                    },
+                    {
+                        "TestName":  "A2 User login /api/auth/user/login",
+                        "Status":  "PASS",
+                        "HTTP":  200,
+                        "Message":  "User token acquired.",
+                        "Evidence":  "{\"success\":true,\"message\":\"Login successful\",\"token\":\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5ZWM1YWZjY2JmZGM1ODFlY2YxNTkwYyIsInJvbGUiOiJVU0VSIiwiaWF0IjoxNzc3MDk3NTM4LCJleHAiOjE3Nzc3MDIzMzh9.DD2I5zcyPnHY59gz6OUdGqiajOdwFxpq-9DuX2PqQBw\",\"user\":{\"preferences\":{\"preferredLocations\":[],\"travelStyle\":\"SOLO\",\"interests\":[]},\"_id\":\"69ec5afccbfdc581ecf1590c\",\"fullName\":\"Smoke User Local\",\"email\":"
+                    },
+                    {
+                        "TestName":  "A3 Agent login /api/auth/agent/login",
+                        "Status":  "PASS",
+                        "HTTP":  200,
+                        "Message":  "Agent token acquired.",
+                        "Evidence":  "{\"success\":true,\"message\":\"Login successful\",\"token\":\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5ZWM1YWZjY2JmZGM1ODFlY2YxNTkwZCIsInJvbGUiOiJBR0VOVCIsImlhdCI6MTc3NzA5NzUzOCwiZXhwIjoxNzc3NzAyMzM4fQ.8Z2PDW5qZKCNXSDQVH6yl1M0BJtewIYHsBMJ2ZFr-7I\",\"agent\":{\"aiSubscription\":{\"plan\":\"YEARLY\",\"isActive\":false,\"expiryDate\":\"2027-04-25T06:11:09.936Z\"},\"_id\":\"69ec5afccbfdc581ecf1590d\",\"fullName\":\"Smoke A"
+                    },
+                    {
+                        "TestName":  "A4 Owner login /api/auth/owner/login",
+                        "Status":  "PASS",
+                        "HTTP":  200,
+                        "Message":  "Owner token acquired.",
+                        "Evidence":  "{\"success\":true,\"message\":\"Login successful\",\"token\":\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5ZWM1OTQ0MzVmZDUwNzNmZTQ4ZWYwZCIsInJvbGUiOiJPV05FUiIsImlhdCI6MTc3NzA5NzUzOCwiZXhwIjoxNzc3NzAyMzM4fQ.XO-RNplfznLjUSbr6r7PHk7klPoYCnj9vY7dmIk_15o\",\"owner\":{\"_id\":\"69ec594435fd5073fe48ef0d\",\"fullName\":\"Super Admin\",\"email\":\"admin@agentra.com\",\"role\":\"OWNER\",\"canVerifyAgents\":true,\"canManageUsers\":tru"
+                    },
+                    {
+                        "TestName":  "A5 Compat login /api/api/auth/agent/login",
+                        "Status":  "PASS",
+                        "HTTP":  200,
+                        "Message":  "Compat login works.",
+                        "Evidence":  "{\"success\":true,\"message\":\"Login successful\",\"token\":\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5ZWM1YWZjY2JmZGM1ODFlY2YxNTkwZCIsInJvbGUiOiJBR0VOVCIsImlhdCI6MTc3NzA5NzUzOCwiZXhwIjoxNzc3NzAyMzM4fQ.8Z2PDW5qZKCNXSDQVH6yl1M0BJtewIYHsBMJ2ZFr-7I\",\"agent\":{\"aiSubscription\":{\"plan\":\"YEARLY\",\"isActive\":false,\"expiryDate\":\"2027-04-25T06:11:09.936Z\"},\"_id\":\"69ec5afccbfdc581ecf1590d\",\"fullName\":\"Smoke A"
+                    },
+                    {
+                        "TestName":  "A6 User logout /api/auth/user/logout",
+                        "Status":  "PASS",
+                        "HTTP":  200,
+                        "Message":  "Logout endpoint works.",
+                        "Evidence":  "{\"success\":true,\"message\":\"Logout successful\"}"
+                    },
+                    {
+                        "TestName":  "A7 Secondary user login (optional)",
+                        "Status":  "PASS",
+                        "HTTP":  200,
+                        "Message":  "Secondary user token acquired.",
+                        "Evidence":  "{\"success\":true,\"message\":\"Login successful\",\"token\":\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5ZWM1YjQxMDYyM2IwOTA2YTZjNGEyZCIsInJvbGUiOiJVU0VSIiwiaWF0IjoxNzc3MDk3NTM4LCJleHAiOjE3Nzc3MDIzMzh9.no3Qoq5Dsi3PJa_qZJU9upMmRDqj4qTr13xcu3fqjto\",\"user\":{\"preferences\":{\"preferredLocations\":[],\"travelStyle\":\"SOLO\",\"interests\":[]},\"_id\":\"69ec5b410623b0906a6c4a2d\",\"fullName\":\"Smoke User Two\",\"email\":\"s"
+                    },
+                    {
+                        "TestName":  "B1 Owner dashboard /api/owner/dashboard",
+                        "Status":  "PASS",
+                        "HTTP":  200,
+                        "Message":  "Owner dashboard reachable.",
+                        "Evidence":  "{\"success\":true,\"stats\":{\"totalUsers\":9,\"totalAgents\":3,\"totalBookings\":0,\"totalComplaints\":0}}"
+                    },
+                    {
+                        "TestName":  "B2 Owner agents /api/owner/agents",
+                        "Status":  "PASS",
+                        "HTTP":  200,
+                        "Message":  "Owner agents list works.",
+                        "Evidence":  "{\"success\":true,\"agents\":[{\"aiSubscription\":{\"plan\":\"MONTHLY\",\"isActive\":true,\"expiryDate\":\"2026-02-06T09:59:02.279Z\"},\"_id\":\"695cdce5409ae38ff8239850\",\"fullName\":\"Test Agent\",\"businessName\":\"Test Travel Agency\",\"email\":\"testagent@example.com\",\"phone\":\"0987654321\",\"cnic\":\"1234567890123\",\"location\":\"\",\"bio\":\"\",\"profileImage\":\"\",\"refundPolicy\":\"\",\"cancellationPolicy\":\"\",\"role\":\"AGENT\",\"isVerified\":f"
+                    },
+                    {
+                        "TestName":  "B3 Owner compat /api/auth/owner/agents",
+                        "Status":  "PASS",
+                        "HTTP":  200,
+                        "Message":  "Owner compat path works.",
+                        "Evidence":  "{\"success\":true,\"agents\":[{\"aiSubscription\":{\"plan\":\"MONTHLY\",\"isActive\":true,\"expiryDate\":\"2026-02-06T09:59:02.279Z\"},\"_id\":\"695cdce5409ae38ff8239850\",\"fullName\":\"Test Agent\",\"businessName\":\"Test Travel Agency\",\"email\":\"testagent@example.com\",\"phone\":\"0987654321\",\"cnic\":\"1234567890123\",\"location\":\"\",\"bio\":\"\",\"profileImage\":\"\",\"refundPolicy\":\"\",\"cancellationPolicy\":\"\",\"role\":\"AGENT\",\"isVerified\":f"
+                    },
+                    {
+                        "TestName":  "B4 Agents list compat /api/agents",
+                        "Status":  "PASS",
+                        "HTTP":  200,
+                        "Message":  "Compat agents list works.",
+                        "Evidence":  "{\"success\":true,\"agents\":[{\"aiSubscription\":{\"plan\":\"MONTHLY\",\"isActive\":true,\"expiryDate\":\"2026-02-06T09:59:02.279Z\"},\"_id\":\"695cdce5409ae38ff8239850\",\"fullName\":\"Test Agent\",\"businessName\":\"Test Travel Agency\",\"email\":\"testagent@example.com\",\"phone\":\"0987654321\",\"cnic\":\"1234567890123\",\"location\":\"\",\"bio\":\"\",\"profileImage\":\"\",\"refundPolicy\":\"\",\"cancellationPolicy\":\"\",\"role\":\"AGENT\",\"isVerified\":f"
+                    },
+                    {
+                        "TestName":  "C1 Agent profile GET /api/auth/agent/profile",
+                        "Status":  "PASS",
+                        "HTTP":  200,
+                        "Message":  "Agent profile read OK.",
+                        "Evidence":  "{\"success\":true,\"agent\":{\"aiSubscription\":{\"plan\":\"YEARLY\",\"isActive\":false,\"expiryDate\":\"2027-04-25T06:11:09.936Z\"},\"_id\":\"69ec5afccbfdc581ecf1590d\",\"fullName\":\"Smoke Agent Local\",\"businessName\":\"Smoke Travels Local\",\"email\":\"smoke.agent.local.1777097468@example.com\",\"phone\":\"03117097468\",\"cnic\":\"42101-7097468-1\",\"location\":\"\",\"bio\":\"Smoke test update 2026-04-25T11:11:09\",\"profileImage\":\"\",\"refun"
+                    },
+                    {
+                        "TestName":  "C2 Agent profile PUT /api/auth/agent/profile",
+                        "Status":  "PASS",
+                        "HTTP":  200,
+                        "Message":  "Agent profile update OK.",
+                        "Evidence":  "{\"success\":true,\"message\":\"Profile updated successfully\",\"agent\":{\"aiSubscription\":{\"plan\":\"YEARLY\",\"isActive\":false,\"expiryDate\":\"2027-04-25T06:11:09.936Z\"},\"_id\":\"69ec5afccbfdc581ecf1590d\",\"fullName\":\"Smoke Agent Local\",\"businessName\":\"Smoke Travels Local\",\"email\":\"smoke.agent.local.1777097468@example.com\",\"phone\":\"03117097468\",\"cnic\":\"42101-7097468-1\",\"location\":\"\",\"bio\":\"Smoke test update 2026"
+                    },
+                    {
+                        "TestName":  "C3 Packages GET /api/packages",
+                        "Status":  "PASS",
+                        "HTTP":  200,
+                        "Message":  "Packages fetched; package id=69ec5b410623b0906a6c4a2e.",
+                        "Evidence":  "{\"success\":true,\"packages\":[{\"includes\":{\"transport\":true,\"accommodation\":true,\"meals\":true},\"_id\":\"69ec5b410623b0906a6c4a2e\",\"agentId\":\"69ec5afccbfdc581ecf1590d\",\"title\":\"Smoke Test Hunza Package\",\"description\":\"Automated smoke package\",\"location\":\"Hunza\",\"price\":15000,\"duration\":\"3 days\",\"province\":\"Gilgit Baltistan\",\"departureCity\":\"Islamabad\",\"notIncluded\":\"\",\"tripHighlights\":\"\",\"availableSeat"
+                    },
+                    {
+                        "TestName":  "C4 Analytics view/click/get package",
+                        "Status":  "PASS",
+                        "HTTP":  200,
+                        "Message":  "Analytics endpoints callable.",
+                        "Evidence":  "{\"success\":true,\"analytics\":{\"views\":1,\"clicks\":1,\"bookings\":0,\"conversionRate\":0,\"revenue\":0,\"date\":\"2026-04-25T06:12:18.654Z\"}}"
+                    },
+                    {
+                        "TestName":  "D1 User packages GET /api/packages",
+                        "Status":  "PASS",
+                        "HTTP":  200,
+                        "Message":  "User packages endpoint OK.",
+                        "Evidence":  "{\"success\":true,\"packages\":[{\"includes\":{\"transport\":true,\"accommodation\":true,\"meals\":true},\"_id\":\"69ec5b410623b0906a6c4a2e\",\"agentId\":\"69ec5afccbfdc581ecf1590d\",\"title\":\"Smoke Test Hunza Package\",\"description\":\"Automated smoke package\",\"location\":\"Hunza\",\"price\":15000,\"duration\":\"3 days\",\"province\":\"Gilgit Baltistan\",\"departureCity\":\"Islamabad\",\"notIncluded\":\"\",\"tripHighlights\":\"\",\"availableSeat"
+                    },
+                    {
+                        "TestName":  "D2 Search GET /api/search?q=test",
+                        "Status":  "PASS",
+                        "HTTP":  200,
+                        "Message":  "Search endpoint OK.",
+                        "Evidence":  "{\"success\":true,\"packages\":[{\"includes\":{\"transport\":true,\"accommodation\":true,\"meals\":true},\"_id\":\"69ec5b410623b0906a6c4a2e\",\"agentId\":{\"_id\":\"69ec5afccbfdc581ecf1590d\",\"fullName\":\"Smoke Agent Local\",\"businessName\":\"Smoke Travels Local\",\"location\":\"\",\"averageRating\":0},\"title\":\"Smoke Test Hunza Package\",\"description\":\"Automated smoke package\",\"location\":\"Hunza\",\"price\":15000,\"duration\":\"3 days\",\""
+                    },
+                    {
+                        "TestName":  "D3 Create booking POST /api/bookings",
+                        "Status":  "PASS",
+                        "HTTP":  201,
+                        "Message":  "Booking created.",
+                        "Evidence":  "{\"success\":true,\"booking\":{\"userId\":\"69ec5afccbfdc581ecf1590c\",\"agentId\":\"69ec5afccbfdc581ecf1590d\",\"packageId\":\"69ec5b410623b0906a6c4a2e\",\"seats\":1,\"travelDate\":\"2026-05-10T00:00:00.000Z\",\"totalAmount\":15000,\"paymentStatus\":\"PAID\",\"paymentMethod\":\"JAZZCASH\",\"status\":\"CONFIRMED\",\"refundStatus\":\"NONE\",\"_id\":\"69ec5b420623b0906a6c4a30\",\"createdAt\":\"2026-04-25T06:12:18.777Z\",\"updatedAt\":\"2026-04-25T06"
+                    },
+                    {
+                        "TestName":  "D4 My bookings GET /api/bookings/my",
+                        "Status":  "PASS",
+                        "HTTP":  200,
+                        "Message":  "My bookings endpoint OK.",
+                        "Evidence":  "{\"success\":true,\"bookings\":[{\"_id\":\"69ec5b420623b0906a6c4a30\",\"userId\":\"69ec5afccbfdc581ecf1590c\",\"agentId\":\"69ec5afccbfdc581ecf1590d\",\"packageId\":{\"includes\":{\"transport\":true,\"accommodation\":true,\"meals\":true},\"_id\":\"69ec5b410623b0906a6c4a2e\",\"agentId\":\"69ec5afccbfdc581ecf1590d\",\"title\":\"Smoke Test Hunza Package\",\"description\":\"Automated smoke package\",\"location\":\"Hunza\",\"price\":15000,\"duration\""
+                    },
+                    {
+                        "TestName":  "D5 Cancel booking PUT /api/bookings/{id}/cancel",
+                        "Status":  "PASS",
+                        "HTTP":  200,
+                        "Message":  "Cancel booking endpoint OK.",
+                        "Evidence":  "{\"success\":true,\"message\":\"Booking cancelled. Refund initiated.\"}"
+                    },
+                    {
+                        "TestName":  "E1 Payment methods includes paymentMethods+methods",
+                        "Status":  "PASS",
+                        "HTTP":  200,
+                        "Message":  "Payment methods compatibility keys present.",
+                        "Evidence":  "{\"success\":true,\"paymentMethods\":[{\"id\":\"card\",\"name\":\"Credit/Debit Card\",\"icon\":\"credit-card\",\"supported\":true},{\"id\":\"jazzcash\",\"name\":\"JazzCash\",\"icon\":\"mobile\",\"supported\":true},{\"id\":\"easypaisa\",\"name\":\"EasyPaisa\",\"icon\":\"mobile\",\"supported\":true},{\"id\":\"bank\",\"name\":\"Bank Transfer\",\"icon\":\"bank\",\"supported\":true}],\"methods\":[\"CARD\",\"JAZZCASH\",\"EASYPAISA\",\"BANK\"]}"
+                    },
+                    {
+                        "TestName":  "E2 Payment history includes transactions+payments",
+                        "Status":  "PASS",
+                        "HTTP":  200,
+                        "Message":  "Payment history compatibility keys present.",
+                        "Evidence":  "{\"success\":true,\"transactions\":[],\"payments\":[],\"pagination\":{\"total\":0,\"limit\":20,\"skip\":0,\"hasMore\":false}}"
+                    },
+                    {
+                        "TestName":  "E3 Optional payment intent/process (skip if no unpaid booking path)",
+                        "Status":  "SKIP",
+                        "HTTP":  0,
+                        "Message":  "No unpaid booking path available for intent/process in current data flow.",
+                        "Evidence":  ""
+                    },
+                    {
+                        "TestName":  "F1 Public reviews /api/users/reviews?packageId=...",
+                        "Status":  "PASS",
+                        "HTTP":  200,
+                        "Message":  "Public package reviews endpoint OK.",
+                        "Evidence":  "{\"success\":true,\"reviews\":[]}"
+                    },
+                    {
+                        "TestName":  "F2 Saved check no token /api/saved/{id}/check",
+                        "Status":  "PASS",
+                        "HTTP":  200,
+                        "Message":  "Saved check without token returns isSaved=false.",
+                        "Evidence":  "{\"success\":true,\"isSaved\":false}"
+                    },
+                    {
+                        "TestName":  "F3 Saved check with token /api/saved/{id}/check",
+                        "Status":  "PASS",
+                        "HTTP":  200,
+                        "Message":  "Saved check with token returns expected structure.",
+                        "Evidence":  "{\"success\":true,\"isSaved\":false,\"notes\":\"\"}"
+                    },
+                    {
+                        "TestName":  "G1 Chatbot start /api/chatbot/start",
+                        "Status":  "PASS",
+                        "HTTP":  200,
+                        "Message":  "Chatbot conversation started.",
+                        "Evidence":  "{\"success\":true,\"conversationId\":\"69ec5b420623b0906a6c4a31\",\"sessionId\":\"SESSION-1777097538984-wi1nnct20\",\"initialMessage\":{\"role\":\"BOT\",\"content\":\"Hello! I\u0027m your AI travel assistant. How can I help you find the perfect travel package today?\",\"timestamp\":\"2026-04-25T06:12:18.984Z\",\"_id\":\"69ec5b420623b0906a6c4a32\"}}"
+                    },
+                    {
+                        "TestName":  "G2 Chatbot message with owner token",
+                        "Status":  "PASS",
+                        "HTTP":  200,
+                        "Message":  "Chatbot message works for owner user.",
+                        "Evidence":  "{\"success\":true,\"response\":{\"content\":\"Hello! I\u0027m your AI travel assistant. How can I help you find the perfect travel package today? You can ask me about destinations, prices, or travel options!\",\"intent\":\"greeting\"},\"conversation\":{\"id\":\"69ec5b420623b0906a6c4a31\",\"messageCount\":3}}"
+                    },
+                    {
+                        "TestName":  "G3 Chatbot ownership negative with secondary user",
+                        "Status":  "PASS",
+                        "HTTP":  404,
+                        "Message":  "Cross-user chatbot ownership enforced.",
+                        "Evidence":  ""
+                    },
+                    {
+                        "TestName":  "G4 Chatbot message without token should fail",
+                        "Status":  "PASS",
+                        "HTTP":  401,
+                        "Message":  "Chatbot message auth enforced.",
+                        "Evidence":  ""
+                    },
+                    {
+                        "TestName":  "H1 Cancel booking without token =\u003e 401",
+                        "Status":  "PASS",
+                        "HTTP":  401,
+                        "Message":  "Cancel booking auth enforced.",
+                        "Evidence":  ""
+                    },
+                    {
+                        "TestName":  "H2 Cancel booking wrong user =\u003e 403 (optional)",
+                        "Status":  "PASS",
+                        "HTTP":  403,
+                        "Message":  "Booking ownership enforced.",
+                        "Evidence":  ""
+                    },
+                    {
+                        "TestName":  "H3 temp-cleanup without owner =\u003e 401/403",
+                        "Status":  "PASS",
+                        "HTTP":  401,
+                        "Message":  "Temp-cleanup protected.",
+                        "Evidence":  ""
+                    },
+                    {
+                        "TestName":  "H4 temp-cleanup with owner token (destructive, opt-in)",
+                        "Status":  "SKIP",
+                        "HTTP":  0,
+                        "Message":  "Set ALLOW_DESTRUCTIVE_TESTS=true to run.",
+                        "Evidence":  ""
+                    },
+                    {
+                        "TestName":  "I1 Subscription plans GET /api/subscription/plans",
+                        "Status":  "PASS",
+                        "HTTP":  200,
+                        "Message":  "Subscription plans endpoint OK.",
+                        "Evidence":  "{\"success\":true,\"plans\":[{\"name\":\"FREE\",\"price\":0,\"duration\":\"Lifetime\",\"features\":[\"Basic package listing\",\"Limited bookings\",\"Standard support\"],\"aiToolsAccess\":{\"salesAgent\":false,\"chatbot\":false,\"analytics\":false}},{\"name\":\"MONTHLY\",\"price\":2499,\"duration\":\"1 Month\",\"features\":[\"AI Sales Agent\",\"AI Chatbot\",\"Advanced Analytics\",\"Priority support\"],\"aiToolsAccess\":{\"salesAgent\":true,\"chatbot\":t"
+                    },
+                    {
+                        "TestName":  "I2 Subscribe agent /api/subscription/subscribe",
+                        "Status":  "PASS",
+                        "HTTP":  201,
+                        "Message":  "Subscribe flow OK.",
+                        "Evidence":  "{\"success\":true,\"message\":\"Subscription activated successfully\",\"subscription\":{\"aiToolsAccess\":{\"salesAgent\":true,\"chatbot\":true,\"analytics\":true},\"_id\":\"69ec5afdcbfdc581ecf15913\",\"agentId\":\"69ec5afccbfdc581ecf1590d\",\"plan\":\"MONTHLY\",\"status\":\"ACTIVE\",\"startDate\":\"2026-04-25T06:12:19.088Z\",\"endDate\":\"2026-05-25T06:12:19.088Z\",\"paymentMethod\":\"JAZZCASH\",\"paymentId\":\"PAY-1777097539088-gkzolq1ki\",\"a"
+                    },
+                    {
+                        "TestName":  "I3 Current subscription GET /api/subscription/current",
+                        "Status":  "PASS",
+                        "HTTP":  200,
+                        "Message":  "Current subscription endpoint OK.",
+                        "Evidence":  "{\"success\":true,\"subscription\":{\"aiToolsAccess\":{\"salesAgent\":true,\"chatbot\":true,\"analytics\":true},\"_id\":\"69ec5afdcbfdc581ecf15913\",\"agentId\":\"69ec5afccbfdc581ecf1590d\",\"plan\":\"MONTHLY\",\"status\":\"ACTIVE\",\"startDate\":\"2026-04-25T06:12:19.088Z\",\"endDate\":\"2026-05-25T06:12:19.088Z\",\"paymentMethod\":\"JAZZCASH\",\"paymentId\":\"PAY-1777097539088-gkzolq1ki\",\"amount\":2499,\"autoRenew\":false,\"features\":[{\"name"
+                    },
+                    {
+                        "TestName":  "I4 Upgrade subscription alternate plan",
+                        "Status":  "PASS",
+                        "HTTP":  200,
+                        "Message":  "Upgrade subscription to YEARLY succeeded.",
+                        "Evidence":  "{\"success\":true,\"message\":\"Subscription upgraded successfully\",\"subscription\":{\"aiToolsAccess\":{\"salesAgent\":true,\"chatbot\":true,\"analytics\":true},\"_id\":\"69ec5afdcbfdc581ecf15913\",\"agentId\":\"69ec5afccbfdc581ecf1590d\",\"plan\":\"YEARLY\",\"status\":\"ACTIVE\",\"startDate\":\"2026-04-25T06:12:19.139Z\",\"endDate\":\"2027-04-25T06:12:19.139Z\",\"paymentMethod\":\"JAZZCASH\",\"paymentId\":\"UPG-1777097539139-0rdkc3b9h\",\"amo"
+                    },
+                    {
+                        "TestName":  "I5 Cancel subscription then verify /current",
+                        "Status":  "PASS",
+                        "HTTP":  200,
+                        "Message":  "Cancel/current consistency check completed.",
+                        "Evidence":  "{\"success\":true,\"subscription\":{\"aiToolsAccess\":{\"salesAgent\":true,\"chatbot\":true,\"analytics\":true},\"_id\":\"69ec5afdcbfdc581ecf15913\",\"agentId\":\"69ec5afccbfdc581ecf1590d\",\"plan\":\"YEARLY\",\"status\":\"CANCELLED\",\"startDate\":\"2026-04-25T06:12:19.139Z\",\"endDate\":\"2027-04-25T06:12:19.139Z\",\"paymentMethod\":\"JAZZCASH\",\"paymentId\":\"UPG-1777097539139-0rdkc3b9h\",\"amount\":22500,\"autoRenew\":false,\"features\":[{\"n"
+                    }
+                ]
+}
