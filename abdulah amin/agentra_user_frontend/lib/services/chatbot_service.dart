@@ -3,9 +3,7 @@ import 'package:http/http.dart' as http;
 import '../models/chat_message.dart';
 
 class ChatbotService {
-  // ⚠️ Change YOUR_COMPUTER_IP to your laptop's local IP
-
-  static const String _chatbotUrl = 'http://192.168.18.74:5000/api/chatbot/chat';
+  static String get _chatbotUrl => '${ApiConfig.BASE_URL}/chatbot/chat';
 
   static String? _sessionId;
 

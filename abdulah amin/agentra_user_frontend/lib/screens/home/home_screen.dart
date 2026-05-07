@@ -202,7 +202,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                 price: 'PKR ${package.price}',
                                 description: package.description,
                                 rating: package.rating ?? 4.5,
-                                showSaleBadge: false,
+                                showSaleBadge: package.hasDiscount == true && package.discountPercentage > 0,
+                                discountPercentage: package.discountPercentage,
                                 package: package,
                                 onReviewTap: () {
     Navigator.pushNamed(

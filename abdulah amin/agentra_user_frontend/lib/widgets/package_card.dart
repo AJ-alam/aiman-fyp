@@ -14,6 +14,7 @@ class PackageCard extends StatefulWidget {
   final VoidCallback? onTap;
   final VoidCallback? onReviewTap;
   final Package? package; // needed for saving
+  final double discountPercentage;
 
   const PackageCard({
     super.key,
@@ -27,6 +28,7 @@ class PackageCard extends StatefulWidget {
     this.onTap,
     this.package,
     this.onReviewTap,
+    this.discountPercentage = 0,
   });
 
   @override
@@ -96,7 +98,7 @@ class _PackageCardState extends State<PackageCard> {
                         width: 100,
                         height: 100,
                         color: AppColors.backgroundGray,
-                        child: const Icon(Icons.image,
+                        child: const Icon(Icons.broken_image_outlined,
                             color: AppColors.textTertiary),
                       );
                     },
@@ -120,7 +122,7 @@ class _PackageCardState extends State<PackageCard> {
                               color: Colors.white, size: 12),
                           const SizedBox(width: 2),
                           Text(
-                            '30%\nOFF',
+                            '${widget.discountPercentage.toInt()}%\nOFF',
                             style: AppTextStyles.bodySmall.copyWith(
                               color: Colors.white,
                               fontSize: 9,

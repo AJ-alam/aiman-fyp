@@ -328,6 +328,42 @@ class _DashboardWithPackagesScreenState extends State<DashboardWithPackagesScree
               ),
               child: Stack(
                 children: [
+                  // Discount Badge
+                  if (package.hasDiscount && package.discountPercentage > 0)
+                    Positioned(
+                      top: 12,
+                      left: 12,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: AppColors.error,
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.error.withOpacity(0.3),
+                              blurRadius: 8,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.local_offer, color: Colors.white, size: 14),
+                            const SizedBox(width: 4),
+                            Text(
+                              '${package.discountPercentage.toInt()}% OFF',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  // Rating Badge
                   Positioned(
                     top: 12,
                     right: 12,

@@ -32,7 +32,75 @@ class _PackageDetailScreenState extends State<PackageDetailScreen> {
         _package = package;
         _isLoading = false;
       });
+
+      // Show discount pop-up if package has a discount
+      if (package != null && package.hasDiscount == true && package.discountPercentage > 0) {
+        Future.delayed(const Duration(milliseconds: 500), () {
+          if (mounted) _showDiscountDialog(package);
+        });
+      }
     }
+  }
+
+  void _showDiscountDialog(Package package) {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(24),
+            gradient: const LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Color(0xFFff416c), Color(0xFFff4b2b)],
+            ),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.local_offer, color: Colors.white, size: 64),
+              const SizedBox(height: 16),
+              const Text(
+                'EXCLUSIVE OFFER!',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 22,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 1.2,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Get ${package.discountPercentage.toInt()}% OFF on this adventure',
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(context),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.white,
+                  foregroundColor: const Color(0xFFff416c),
+                  padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 16),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  elevation: 0,
+                ),
+                child: const Text(
+                  'WOW, SHOW ME!',
+                  style: TextStyle(fontWeight: FontWeight.w900),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   String _formatDate(dynamic date) {
@@ -94,11 +162,12 @@ class _PackageDetailScreenState extends State<PackageDetailScreen> {
                       decoration: BoxDecoration(
                         image: DecorationImage(
                           image: NetworkImage(
-  pkg.image ??
-      (pkg.images != null && pkg.images!.isNotEmpty
-          ? pkg.images![0]
-          : 'https://via.placeholder.com/400x300'),
-),
+                            (pkg.image != null && pkg.image!.isNotEmpty)
+                                ? pkg.image!
+                                : (pkg.images != null && pkg.images!.isNotEmpty
+                                    ? pkg.images![0]
+                                    : 'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?q=80&w=1000'),
+                          ),
                           fit: BoxFit.cover,
                         ),
                       ),

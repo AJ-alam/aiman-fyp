@@ -30,4 +30,5 @@ class ApiConfig {
   static String rejectAgent(String id) => '$BASE_URL/api/owner/agents/$id/reject';
   static const String ALL_AGENTS = '$BASE_URL/api/agents';
   static const String OWNER_DASHBOARD = '$BASE_URL/api/dashboard/owner';
+  static const String UPLOAD_IMAGE = '$BASE_URL/api/upload/image';
 }

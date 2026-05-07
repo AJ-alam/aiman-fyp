@@ -1,7 +1,8 @@
 class ApiConfig {
   // Base URL - Change based on your device
   // 1. LIVE CLOUD URL (For production/deployed backend)
-  static const String BASE_URL = 'https://agentra-backend.vercel.app/api';
+  // static const String BASE_URL = 'https://agentra-backend.vercel.app/api';
+  static const String BASE_URL = 'http://localhost:5000/api'; 
 
   // 2. LOCAL BACKEND URL (Use this if you are running the backend locally)
   // static const String BASE_URL = 'http://localhost:5000/api'; // For Web/iOS

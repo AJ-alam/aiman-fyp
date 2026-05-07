@@ -167,27 +167,31 @@ class PackageService {
       return false;
     }
   }
- static Future<String?> uploadImage(dynamic imageFile) async {
-  try {
-    var request = http.MultipartRequest(
-      'POST',
-      Uri.parse('https://api.cloudinary.com/v1_1/dk66ra1nm/image/upload'),
-    );
+  static Future<String?> uploadImage(dynamic imageFile) async {
+    try {
+      print('📸 [UPLOAD] Starting image upload: ${imageFile.path}');
+      var request = http.MultipartRequest(
+        'POST',
+        Uri.parse(ApiConfig.UPLOAD_IMAGE),
+      );
 
-    request.fields['upload_preset'] = 'agentra_packages';
-    request.files.add(await http.MultipartFile.fromPath('file', imageFile.path));
+      // Backend expects 'image' field
+      request.files.add(await http.MultipartFile.fromPath('image', imageFile.path));
 
-    final response = await request.send();
-    final body = await response.stream.bytesToString();
-    final data = jsonDecode(body);
+      final response = await request.send();
+      final body = await response.stream.bytesToString();
+      final data = jsonDecode(body);
 
-    if (response.statusCode == 200) {
-      return data['secure_url'];
+      print('📥 [UPLOAD] Response status: ${response.statusCode}');
+      print('📥 [UPLOAD] Response body: $body');
+
+      if (response.statusCode == 200 && data['success'] == true) {
+        return data['url'];
+      }
+      return null;
+    } catch (e) {
+      print('❌ [UPLOAD] Exception: $e');
+      return null;
     }
-    return null;
-  } catch (e) {
-    print('Upload image error: $e');
-    return null;
   }
-}
 }
