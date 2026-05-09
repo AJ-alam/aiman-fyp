@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/custom_input.dart';
+import '../../services/review_service.dart';
 
 class RateTripScreen extends StatefulWidget {
-  const RateTripScreen({super.key});
+  final String packageId;
+
+  const RateTripScreen({super.key, required this.packageId});
 
   @override
   State<RateTripScreen> createState() => _RateTripScreenState();
@@ -13,6 +16,44 @@ class RateTripScreen extends StatefulWidget {
 class _RateTripScreenState extends State<RateTripScreen> {
   int _rating = 0;
   final _reviewController = TextEditingController();
+  bool _isSubmitting = false;
+
+  Future<void> _submitReview() async {
+    if (_rating == 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select a rating')),
+      );
+      return;
+    }
+
+    setState(() => _isSubmitting = true);
+
+    final success = await ReviewService.createReview(
+      packageId: widget.packageId,
+      rating: _rating,
+      comment: _reviewController.text.trim(),
+    );
+
+    if (mounted) {
+      setState(() => _isSubmitting = false);
+      if (success) {
+        Navigator.pop(context, true);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Review submitted successfully!'),
+            backgroundColor: AppColors.success,
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to submit review'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    }
+  }
 
   @override
   void dispose() {
@@ -97,17 +138,8 @@ class _RateTripScreenState extends State<RateTripScreen> {
               const Spacer(),
               CustomButton(
                 text: 'Submit Review',
-                onPressed: () {
-                  if (_rating > 0) {
-                    Navigator.pop(context);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Review submitted successfully!'),
-                        backgroundColor: AppColors.success,
-                      ),
-                    );
-                  }
-                },
+                isLoading: _isSubmitting,
+                onPressed: _isSubmitting ? null : _submitReview,
               ),
               const SizedBox(height: 12),
               Center(

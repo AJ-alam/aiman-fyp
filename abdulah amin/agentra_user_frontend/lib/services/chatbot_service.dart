@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../models/chat_message.dart';
+import '../config/api_config.dart';
 
 class ChatbotService {
   static String get _chatbotUrl => '${ApiConfig.BASE_URL}/chatbot/chat';

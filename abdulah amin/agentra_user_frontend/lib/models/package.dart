@@ -1,3 +1,4 @@
+import '../config/api_config.dart';
 class Package {
   final String id;
   final String title;
@@ -77,9 +78,9 @@ factory Package.fromJson(Map<String, dynamic> json) {
     province: json['province'],
     departureCity: json['departureCity'],
 
-    image: json['image'],
+    image: ApiConfig.getImageUrl(json['image']),
     images: json['images'] != null
-        ? List<String>.from(json['images'])
+        ? List<String>.from(json['images'].map((i) => ApiConfig.getImageUrl(i)))
         : null,
 
     rating: json['rating'] != null

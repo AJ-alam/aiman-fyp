@@ -96,4 +96,32 @@ router.patch("/reject-agent/:id", protect, role("OWNER"), async (req, res) => {
   }
 });
 
+// ================= COMPLAINTS =================
+router.get("/complaints", protect, role("OWNER"), async (req, res) => {
+  try {
+    const Complaint = require("../models/Complaint");
+    const complaints = await Complaint.find().sort({ createdAt: -1 });
+    res.json({ success: true, complaints });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+router.patch("/complaints/:id/respond", protect, role("OWNER"), async (req, res) => {
+  try {
+    const Complaint = require("../models/Complaint");
+    const { response } = req.body;
+    const complaint = await Complaint.findById(req.params.id);
+    if (!complaint) return res.status(404).json({ success: false, message: "Complaint not found" });
+
+    complaint.adminResponse = response;
+    complaint.status = "RESOLVED";
+    await complaint.save();
+
+    res.json({ success: true, complaint });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 module.exports = router;

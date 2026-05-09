@@ -3,7 +3,14 @@ class ApiConfig {
   // 1. LIVE CLOUD URL (For production/deployed backend)
   // static const String BASE_URL = 'https://agentra-backend.vercel.app/api';
   static const String BASE_URL = 'http://localhost:5000/api'; 
+  static const String SERVER_URL = 'http://localhost:5000';
 
+  static String getImageUrl(String? path) {
+    if (path == null || path.isEmpty) return 'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?q=80\u0026w=1000';
+    if (path.startsWith('http')) return path;
+    if (path.startsWith('/')) return '$SERVER_URL$path';
+    return '$SERVER_URL/$path';
+  }
   // 2. LOCAL BACKEND URL (Use this if you are running the backend locally)
   // static const String BASE_URL = 'http://localhost:5000/api'; // For Web/iOS
   // static const String BASE_URL = 'http://10.0.2.2:5000/api';  // For Android Emulator

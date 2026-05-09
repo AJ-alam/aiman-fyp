@@ -34,7 +34,7 @@ class _PackageDetailScreenState extends State<PackageDetailScreen> {
       });
 
       // Show discount pop-up if package has a discount
-      if (package != null && package.hasDiscount == true && package.discountPercentage > 0) {
+      if (package != null && package.hasDiscount == true && (package.discountPercentage ?? 0) > 0) {
         Future.delayed(const Duration(milliseconds: 500), () {
           if (mounted) _showDiscountDialog(package);
         });
@@ -73,7 +73,7 @@ class _PackageDetailScreenState extends State<PackageDetailScreen> {
               ),
               const SizedBox(height: 8),
               Text(
-                'Get ${package.discountPercentage.toInt()}% OFF on this adventure',
+                'Get ${(package.discountPercentage ?? 0).toInt()}% OFF on this adventure',
                 textAlign: TextAlign.center,
                 style: const TextStyle(
                   color: Colors.white,

@@ -1,3 +1,4 @@
+import '../config/api_config.dart';
 class User {
   final String id;
   final String fullName;
@@ -24,7 +25,7 @@ class User {
       email: json['email'] ?? '',
       phone: json['phone'],
       bio: json['bio'],
-      profileImage: json['profileImage'],
+      profileImage: ApiConfig.getImageUrl(json['profileImage']),
       role: json['role'] ?? 'user',
     );
   }

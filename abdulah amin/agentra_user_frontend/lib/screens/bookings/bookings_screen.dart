@@ -3,6 +3,7 @@ import '../../theme/app_theme.dart';
 import '../../widgets/bottom_nav_bar.dart';
 import '../../services/booking_service.dart';
 import '../../models/booking.dart';
+import '../reviews/rate_trip_screen.dart';
 
 class BookingsScreen extends StatefulWidget {
   const BookingsScreen({super.key});
@@ -199,89 +200,108 @@ class _BookingsScreenState extends State<BookingsScreen> {
   }
 
   Widget _buildBookingCard(Booking booking) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(AppDimensions.radius),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 60,
-            height: 60,
-            decoration: BoxDecoration(
-              color: AppColors.backgroundLight,
-              borderRadius: BorderRadius.circular(8),
-              image: (booking.packageImage != null && booking.packageImage!.isNotEmpty)
-                  ? DecorationImage(
-                      image: NetworkImage(booking.packageImage!),
-                      fit: BoxFit.cover,
-                    )
+    return GestureDetector(
+      onTap: () {
+        if (booking.status.toLowerCase() == 'completed') {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => RateTripScreen(packageId: booking.packageId),
+            ),
+          ).then((_) => _loadBookings());
+        }
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(AppDimensions.radius),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 60,
+              height: 60,
+              decoration: BoxDecoration(
+                color: AppColors.backgroundLight,
+                borderRadius: BorderRadius.circular(8),
+                image: (booking.packageImage != null && booking.packageImage!.isNotEmpty)
+                    ? DecorationImage(
+                        image: NetworkImage(booking.packageImage!),
+                        fit: BoxFit.cover,
+                      )
+                    : null,
+              ),
+              child: (booking.packageImage == null || booking.packageImage!.isEmpty)
+                  ? const Icon(Icons.image, color: AppColors.textTertiary)
                   : null,
             ),
-            child: (booking.packageImage == null || booking.packageImage!.isEmpty)
-                ? const Icon(Icons.image, color: AppColors.textTertiary)
-                : null,
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  booking.packageTitle,
-                  style: AppTextStyles.bodyLarge.copyWith(
-                    fontWeight: FontWeight.w600,
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    booking.packageTitle,
+                    style: AppTextStyles.bodyLarge.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    const Icon(
-                      Icons.calendar_today,
-                      size: 14,
-                      color: AppColors.textTertiary,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      booking.travelDate,
-                      style: AppTextStyles.bodySmall,
-                    ),
-                    const SizedBox(width: 12),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: _getStatusColor(booking.status).withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(4),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.calendar_today,
+                        size: 14,
+                        color: AppColors.textTertiary,
                       ),
-                      child: Text(
-                        booking.status.toUpperCase(),
-                        style: AppTextStyles.bodySmall.copyWith(
-                          color: _getStatusColor(booking.status),
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
+                      const SizedBox(width: 4),
+                      Text(
+                        booking.travelDate,
+                        style: AppTextStyles.bodySmall,
+                      ),
+                      const SizedBox(width: 12),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: _getStatusColor(booking.status).withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          booking.status.toUpperCase(),
+                          style: AppTextStyles.bodySmall.copyWith(
+                            color: _getStatusColor(booking.status),
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
-                    ),
-                  ],
-                ),
-              ],
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ),
-          const Icon(
-            Icons.chevron_right,
-            color: AppColors.textTertiary,
-          ),
-        ],
+            if (booking.status.toLowerCase() == 'completed')
+              const Icon(
+                Icons.rate_review,
+                color: AppColors.primary,
+                size: 20,
+              )
+            else
+              const Icon(
+                Icons.chevron_right,
+                color: AppColors.textTertiary,
+              ),
+          ],
+        ),
       ),
     );
   }

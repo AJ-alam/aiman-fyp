@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../models/package.dart';
 import '../../services/booking_service.dart';
+import '../payments/jazzcash_payment_screen.dart';
 
 class CreateBookingScreen extends StatefulWidget {
   final Package package;
@@ -35,6 +36,29 @@ class _CreateBookingScreenState extends State<CreateBookingScreen> {
   Future<void> _createBooking() async {
     if (!_formKey.currentState!.validate()) return;
 
+    final double actualPrice = (widget.package.hasDiscount == true)
+        ? widget.package.price * (1 - (widget.package.discountPercentage ?? 0) / 100)
+        : widget.package.price;
+    final totalPrice = actualPrice * _seats;
+
+    if (_paymentMethod == 'JAZZCASH') {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => JazzCashPaymentScreen(
+            package: widget.package,
+            seats: _seats,
+            amount: totalPrice,
+            onPaymentSuccess: () => _finalizeBooking(),
+          ),
+        ),
+      );
+    } else {
+      _finalizeBooking();
+    }
+  }
+
+  Future<void> _finalizeBooking() async {
     setState(() => _isLoading = true);
 
     final result = await BookingService.createBooking(
@@ -59,14 +83,22 @@ class _CreateBookingScreenState extends State<CreateBookingScreen> {
       );
 
       if (success) {
-        Navigator.pop(context, true);
+        // Go back twice if we came from JazzCash, once otherwise
+        if (_paymentMethod == 'JAZZCASH') {
+          Navigator.of(context).popUntil((route) => route.settings.name == '/package-detail');
+        } else {
+          Navigator.pop(context, true);
+        }
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final totalPrice = widget.package.price * _seats;
+    final double actualPrice = (widget.package.hasDiscount == true)
+        ? widget.package.price * (1 - (widget.package.discountPercentage ?? 0) / 100)
+        : widget.package.price;
+    final totalPrice = actualPrice * _seats;
 
     return Scaffold(
       appBar: AppBar(

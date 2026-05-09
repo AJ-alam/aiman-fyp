@@ -30,6 +30,19 @@ export default function ComplaintsPage() {
     }
   };
 
+  const handleRespond = async (id: string) => {
+    const response = prompt('Enter your response to this complaint:');
+    if (!response) return;
+
+    try {
+      await adminService.respondToComplaint(id, response);
+      alert('Response submitted successfully');
+      loadComplaints();
+    } catch (err: any) {
+      alert(`Failed to respond: ${err.message}`);
+    }
+  };
+
   return (
     <div className="space-y-12">
       {/* Header */}
@@ -42,7 +55,7 @@ export default function ComplaintsPage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         {[
           { label: 'Total Complaints', value: complaints.length, color: 'red' },
-          { label: 'Open', value: complaints.filter(c => c.status === 'OPEN').length, color: 'orange' },
+          { label: 'Open', value: complaints.filter(c => c.status !== 'RESOLVED').length, color: 'orange' },
           { label: 'Resolved', value: complaints.filter(c => c.status === 'RESOLVED').length, color: 'green' }
         ].map((stat, i) => (
           <div key={i} className="bg-white p-8 rounded-[32px] shadow-sm border border-gray-50 flex flex-col justify-between hover:shadow-md transition-all">
@@ -57,7 +70,7 @@ export default function ComplaintsPage() {
         <div className="p-10 border-b border-gray-50 flex items-center justify-between bg-gray-50/30">
           <h2 className="text-2xl font-black">Customer Complaints</h2>
           <div className="bg-red-100 text-red-600 px-6 py-2 rounded-full font-bold text-sm">
-            {complaints.filter(c => c.status === 'OPEN').length} Open Issues
+            {complaints.filter(c => c.status !== 'RESOLVED').length} Open Issues
           </div>
         </div>
 
@@ -80,7 +93,7 @@ export default function ComplaintsPage() {
                 <tr className="bg-gray-50/50">
                   <th className="px-10 py-6 text-[#7D848D] font-bold uppercase tracking-widest text-xs">Complaint</th>
                   <th className="px-10 py-6 text-[#7D848D] font-bold uppercase tracking-widest text-xs">Status</th>
-                  <th className="px-10 py-6 text-[#7D848D] font-bold uppercase tracking-widest text-xs">Date</th>
+                  <th className="px-10 py-6 text-[#7D848D] font-bold uppercase tracking-widest text-xs">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
@@ -97,23 +110,32 @@ export default function ComplaintsPage() {
                         <div className="flex flex-col">
                           <span className="font-bold text-lg">{complaint.subject}</span>
                           <span className="text-[#7D848D] text-sm line-clamp-2">{complaint.description}</span>
+                          {complaint.adminResponse && (
+                            <div className="mt-2 p-3 bg-green-50 rounded-lg border border-green-100">
+                              <p className="text-xs font-bold text-green-800 uppercase tracking-wider">Admin Response:</p>
+                              <p className="text-sm text-green-700">{complaint.adminResponse}</p>
+                            </div>
+                          )}
                         </div>
                       </td>
                       <td className="px-10 py-8">
                         <span className={`inline-flex items-center px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-tighter ${
                           complaint.status === 'RESOLVED'
                             ? 'bg-green-100 text-green-600'
-                            : complaint.status === 'IN_PROGRESS'
-                            ? 'bg-blue-100 text-blue-600'
                             : 'bg-red-100 text-red-600'
                           }`}>
                           {complaint.status || 'OPEN'}
                         </span>
                       </td>
                       <td className="px-10 py-8">
-                        <span className="text-[#7D848D] text-sm">
-                          {complaint.createdAt ? new Date(complaint.createdAt).toLocaleDateString() : 'N/A'}
-                        </span>
+                        {complaint.status !== 'RESOLVED' && (
+                          <button
+                            onClick={() => handleRespond(complaint._id)}
+                            className="bg-black text-white px-6 py-2 rounded-full font-bold text-sm hover:bg-gray-800 transition-colors"
+                          >
+                            Resolve
+                          </button>
+                        )}
                       </td>
                     </tr>
                   ))

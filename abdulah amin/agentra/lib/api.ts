@@ -91,11 +91,19 @@ export const adminService = {
 
     getComplaints: async () => {
         console.log("⚠️ [ADMIN] Fetching complaints...");
-        const response = await apiRequest("/complaints", {
+        const response = await apiRequest("/admin/complaints", {
             method: "GET",
         });
         console.log("✅ [ADMIN] Complaints response:", response);
         return response?.complaints || [];
+    },
+
+    respondToComplaint: (id: string, response: string) => {
+        console.log(`💬 [ADMIN] Responding to complaint: ${id}`);
+        return apiRequest(`/admin/complaints/${id}/respond`, {
+            method: "PATCH",
+            body: JSON.stringify({ response }),
+        });
     },
 
     getSystemLogs: async () => {

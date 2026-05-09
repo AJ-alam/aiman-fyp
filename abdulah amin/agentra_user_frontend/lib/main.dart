@@ -26,6 +26,7 @@ import 'screens/reviews/rate_trip_screen.dart';
 import 'screens/favorites/favorites_screen.dart';
 import 'screens/support/support_chat_screen.dart';
 import 'screens/complaints/complaint_screen.dart';
+import 'screens/complaints/file_complaint_screen.dart';
 import 'screens/refunds/refund_request_screen.dart';
 import 'screens/refunds/refund_success_screen.dart';
 import 'screens/chatbot/chatbot_screen.dart';
@@ -85,6 +86,7 @@ class AgentraApp extends StatelessWidget {
         '/favorites': (context) => const FavoritesScreen(),
         '/support-chat': (context) => const SupportChatScreen(),
         '/complaint': (context) => const ComplaintsScreen(),
+        '/file-complaint': (context) => const FileComplaintScreen(),
         '/refund-request': (context) => const RefundRequestScreen(),
         '/refund-success': (context) => const RefundSuccessScreen(),
         '/chat': (context) => const ChatbotScreen(),
