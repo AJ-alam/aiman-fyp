@@ -154,82 +154,89 @@ export default function AdminDashboard() {
               </button>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left">
-                <thead>
-                  <tr className="border-b border-gray-50">
-            <div className="space-y-8 p-12">
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="border-b border-gray-50">
-                      <th className="px-12 py-8 text-[#7D848D] font-bold uppercase tracking-widest text-xs">Agent Entity</th>
-                      <th className="px-12 py-8 text-[#7D848D] font-bold uppercase tracking-widest text-xs">Credential Info</th>
-                      <th className="px-12 py-8 text-[#7D848D] font-bold uppercase tracking-widest text-xs text-center">Status</th>
-                      <th className="px-12 py-8 text-[#7D848D] font-bold uppercase tracking-widest text-xs text-right">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-50">
-                    {agents.filter(a => a.status === 'PENDING_APPROVAL').length === 0 ? (
-                      <tr>
-                        <td colSpan={4} className="px-12 py-32 text-center">
-                          <div className="flex flex-col items-center gap-4">
-                            <div className="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center">
-                              <svg className="w-10 h-10 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path>
-                              </svg>
-                            </div>
-                            <p className="font-black text-2xl text-[#1B1E28]">All requests processed!</p>
-                            <p className="text-[#7D848D] font-medium">There are no pending agent verifications.</p>
-                          </div>
-                        </td>
+            <div className="space-y-8">
+              <div className="bg-white rounded-[40px] shadow-2xl shadow-gray-200/50 border border-gray-100/50 overflow-hidden">
+                <div className="p-12 border-b border-gray-50 flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <h2 className="text-2xl font-black text-[#1B1E28]">Verification Queue</h2>
+                    <span className="bg-orange-500 text-white px-4 py-1 rounded-full text-sm font-bold">
+                      {agents.filter(a => a.status === 'PENDING_APPROVAL').length} Pending
+                    </span>
+                  </div>
+                </div>
+                
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="bg-gray-50/30">
+                        <th className="px-12 py-8 text-[#7D848D] font-bold uppercase tracking-widest text-xs">Agent Entity</th>
+                        <th className="px-12 py-8 text-[#7D848D] font-bold uppercase tracking-widest text-xs">Credential Info</th>
+                        <th className="px-12 py-8 text-[#7D848D] font-bold uppercase tracking-widest text-xs text-center">Status</th>
+                        <th className="px-12 py-8 text-[#7D848D] font-bold uppercase tracking-widest text-xs text-right">Actions</th>
                       </tr>
-                    ) : (
-                      agents.filter(a => a.status === 'PENDING_APPROVAL').map((agent) => (
-                        <tr key={agent._id} className="hover:bg-gray-50/50 transition-all group">
-                          <td className="px-12 py-10">
-                            <div className="flex items-center gap-6">
-                              <div className="w-16 h-16 rounded-3xl bg-[#F7F7F9] flex items-center justify-center font-black text-xl text-[#007AFF] shadow-inner">
-                                {agent.fullName?.[0] || agent.name?.[0] || 'A'}
+                    </thead>
+                    <tbody className="divide-y divide-gray-50">
+                      {agents.filter(a => a.status === 'PENDING_APPROVAL').length === 0 ? (
+                        <tr>
+                          <td colSpan={4} className="px-12 py-32 text-center">
+                            <div className="flex flex-col items-center gap-4">
+                              <div className="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center">
+                                <svg className="w-10 h-10 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path>
+                                </svg>
                               </div>
-                              <div className="flex flex-col gap-1">
-                                <p className="font-black text-xl text-[#1B1E28]">{agent.fullName || agent.name || 'Untitled Agent'}</p>
-                                <p className="text-[#7D848D] font-bold text-sm">{agent.email}</p>
-                              </div>
-                            </div>
-                          </td>
-                          <td className="px-12 py-10">
-                            <div className="flex flex-col gap-1">
-                              <p className="font-bold text-[#1B1E28]">{agent.businessName || 'No Business Name'}</p>
-                              <p className="text-[#7D848D] text-sm font-medium">{agent.phone || 'No Phone'}</p>
-                            </div>
-                          </td>
-                          <td className="px-12 py-10">
-                            <span className="inline-flex items-center px-6 py-2 rounded-2xl text-xs font-black uppercase tracking-tighter border bg-orange-50 text-orange-600 border-orange-100">
-                              PENDING
-                            </span>
-                          </td>
-                          <td className="px-12 py-10">
-                            <div className="flex justify-end gap-4 transition-all">
-                              <button
-                                onClick={() => handleApproveAgent(agent._id, agent.fullName || agent.name || 'Agent')}
-                                className="px-6 py-3 bg-[#007AFF] text-white rounded-2xl font-black text-xs hover:shadow-xl hover:shadow-blue-200 transition-all active:scale-95"
-                              >
-                                Approve
-                              </button>
-                              <button
-                                onClick={() => handleRejectAgent(agent._id, agent.fullName || agent.name || 'Agent')}
-                                className="px-6 py-3 bg-white text-rose-600 border border-rose-100 rounded-2xl font-black text-xs hover:bg-rose-50 transition-all active:scale-95"
-                              >
-                                Reject
-                              </button>
+                              <p className="font-black text-2xl text-[#1B1E28]">All requests processed!</p>
+                              <p className="text-[#7D848D] font-medium">There are no pending agent verifications.</p>
                             </div>
                           </td>
                         </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
+                      ) : (
+                        agents.filter(a => a.status === 'PENDING_APPROVAL').map((agent) => (
+                          <tr key={agent._id} className="hover:bg-gray-50/50 transition-all group">
+                            <td className="px-12 py-10">
+                              <div className="flex items-center gap-6">
+                                <div className="w-16 h-16 rounded-3xl bg-[#F7F7F9] flex items-center justify-center font-black text-xl text-[#007AFF] shadow-inner">
+                                  {agent.fullName?.[0] || agent.name?.[0] || 'A'}
+                                </div>
+                                <div className="flex flex-col gap-1">
+                                  <p className="font-black text-xl text-[#1B1E28]">{agent.fullName || agent.name || 'Untitled Agent'}</p>
+                                  <p className="text-[#7D848D] font-bold text-sm">{agent.email}</p>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="px-12 py-10">
+                              <div className="flex flex-col gap-1">
+                                <p className="font-bold text-[#1B1E28]">{agent.businessName || 'No Business Name'}</p>
+                                <p className="text-[#7D848D] text-sm font-medium">{agent.phone || 'No Phone'}</p>
+                              </div>
+                            </td>
+                            <td className="px-12 py-10 text-center">
+                              <span className="inline-flex items-center px-6 py-2 rounded-2xl text-xs font-black uppercase tracking-tighter border bg-orange-50 text-orange-600 border-orange-100">
+                                PENDING
+                              </span>
+                            </td>
+                            <td className="px-12 py-10 text-right">
+                              <div className="flex justify-end gap-4 transition-all">
+                                <button
+                                  onClick={() => handleApproveAgent(agent._id, agent.fullName || agent.name || 'Agent')}
+                                  className="px-6 py-3 bg-[#007AFF] text-white rounded-2xl font-black text-xs hover:shadow-xl hover:shadow-blue-200 transition-all active:scale-95"
+                                >
+                                  Approve
+                                </button>
+                                <button
+                                  onClick={() => handleRejectAgent(agent._id, agent.fullName || agent.name || 'Agent')}
+                                  className="px-6 py-3 bg-white text-rose-600 border border-rose-100 rounded-2xl font-black text-xs hover:bg-rose-50 transition-all active:scale-95"
+                                >
+                                  Reject
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
               </div>
 
               {/* Processed Agents Section */}
