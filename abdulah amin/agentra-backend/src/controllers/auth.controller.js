@@ -311,6 +311,8 @@ const approveAgent = async (req, res) => {
     }
 
     agent.status = 'APPROVED';
+    agent.isVerified = true;
+    agent.emailVerified = true;
     await agent.save();
 
     console.log('DATA SAVED:', agent);

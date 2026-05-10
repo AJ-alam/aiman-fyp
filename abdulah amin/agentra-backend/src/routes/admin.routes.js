@@ -43,6 +43,8 @@ router.patch("/approve-agent/:id", protect, role("OWNER"), async (req, res) => {
     }
 
     agent.status = "APPROVED";
+    agent.isVerified = true;
+    agent.emailVerified = true;
     await agent.save();
 
     console.log(`✅ [ADMIN] Agent approved successfully: ${agent._id}`);

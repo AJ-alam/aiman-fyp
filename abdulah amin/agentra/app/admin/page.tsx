@@ -201,7 +201,7 @@ export default function AdminDashboard() {
                           </span>
                         </td>
                         <td className="px-12 py-10">
-                          <div className="flex justify-end gap-4 opacity-0 group-hover:opacity-100 transition-all">
+                          <div className="flex justify-end gap-4 transition-all">
                             {agent.status === 'PENDING_APPROVAL' ? (
                               <>
                                 <button
