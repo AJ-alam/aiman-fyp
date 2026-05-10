@@ -4,6 +4,7 @@ import '../../widgets/bottom_nav_bar.dart';
 import '../../services/booking_service.dart';
 import '../../models/booking.dart';
 import '../reviews/rate_trip_screen.dart';
+import 'booking_detail_screen.dart';
 
 class BookingsScreen extends StatefulWidget {
   const BookingsScreen({super.key});
@@ -209,6 +210,15 @@ class _BookingsScreenState extends State<BookingsScreen> {
               builder: (context) => RateTripScreen(packageId: booking.packageId),
             ),
           ).then((_) => _loadBookings());
+        } else {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => BookingDetailScreen(booking: booking),
+            ),
+          ).then((result) {
+            if (result == true) _loadBookings();
+          });
         }
       },
       child: Container(

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../theme/app_theme.dart';
 import '../../services/complaint_service.dart';
 import '../../services/booking_service.dart';
+import '../../models/booking.dart';
 
 class FileComplaintScreen extends StatefulWidget {
   const FileComplaintScreen({super.key});
@@ -15,7 +16,7 @@ class _FileComplaintScreenState extends State<FileComplaintScreen> {
   final _subjectController = TextEditingController();
   final _descriptionController = TextEditingController();
   String? _selectedBookingId;
-  List<dynamic> _bookings = [];
+  List<Booking> _bookings = [];
   bool _isLoading = false;
   bool _isSubmitting = false;
 
@@ -94,8 +95,10 @@ class _FileComplaintScreenState extends State<FileComplaintScreen> {
                     hint: const Text('Select related booking'),
                     items: _bookings.map((b) {
                       return DropdownMenuItem<String>(
-                        value: b['_id'],
-                        child: Text(b['packageId']?['title'] ?? 'Booking #${b['_id'].substring(b['_id'].length - 6)}'),
+                        value: b.id,
+                        child: Text(b.packageTitle.isNotEmpty
+                            ? b.packageTitle
+                            : 'Booking #${b.id.length > 6 ? b.id.substring(b.id.length - 6) : b.id}'),
                       );
                     }).toList(),
                     onChanged: (val) => setState(() => _selectedBookingId = val),

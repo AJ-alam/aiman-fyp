@@ -3,9 +3,13 @@ import '../theme/app_theme.dart';
 import '../widgets/side_navigation_drawer.dart';
 import '../widgets/custom_button.dart';
 import '../services/package_service.dart';
+import '../services/auth_service.dart';
 import '../models/package.dart';
 import 'agent_reviews_screen.dart';
 import 'edit_package_screen.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import '../config/api_config.dart';
 
 class DashboardWithPackagesScreen extends StatefulWidget {
   const DashboardWithPackagesScreen({Key? key}) : super(key: key);
@@ -17,11 +21,48 @@ class DashboardWithPackagesScreen extends StatefulWidget {
 class _DashboardWithPackagesScreenState extends State<DashboardWithPackagesScreen> {
   List<Package> _packages = [];
   bool _isLoading = true;
+  int _totalBookings = 0;
+  double _totalEarnings = 0;
+  double _averageRating = 0;
 
   @override
   void initState() {
     super.initState();
     _loadPackages();
+    _loadDashboardStats();
+  }
+
+  Future<void> _loadDashboardStats() async {
+    try {
+      final token = await AuthService.getToken();
+      if (token == null) return;
+      final response = await http.get(
+        Uri.parse(ApiConfig.AGENT_DASHBOARD),
+        headers: {'x-auth-token': token},
+      );
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (mounted) {
+          setState(() {
+            _totalBookings = data['bookings'] ?? 0;
+          });
+        }
+      }
+      // Also load agent profile for rating
+      final profileResp = await http.get(
+        Uri.parse(ApiConfig.AGENT_PROFILE),
+        headers: {'x-auth-token': token},
+      );
+      if (profileResp.statusCode == 200) {
+        final pData = jsonDecode(profileResp.body);
+        if (mounted) {
+          setState(() {
+            _averageRating =
+                (pData['agent']?['averageRating'] ?? 0).toDouble();
+          });
+        }
+      }
+    } catch (_) {}
   }
 
   Future<void> _loadPackages() async {
@@ -102,13 +143,15 @@ class _DashboardWithPackagesScreenState extends State<DashboardWithPackagesScree
                           scrollDirection: Axis.horizontal,
                           child: Row(
                             children: [
-                              _buildStatCard('Total Sales', 'PKR 0', '0%', Colors.green),
+                              _buildStatCard('Total Packages',
+                                  '${_packages.length}', '', Colors.green),
                               const SizedBox(width: 16),
-                              _buildStatCard('Active Bookings', '0', '0%', Colors.blue),
+                              _buildStatCard('Active Bookings',
+                                  '$_totalBookings', '', Colors.blue),
                               const SizedBox(width: 16),
-                              _buildStatCard('Pending Payouts', 'PKR 0', '0%', Colors.orange),
-                              const SizedBox(width: 16),
-                              _buildStatCard('Rating', '5.0', '0%', Colors.amber),
+                              _buildStatCard('Avg Rating',
+                                  _averageRating > 0 ? _averageRating.toStringAsFixed(1) : '—',
+                                  '', Colors.amber),
                             ],
                           ),
                         ),
@@ -237,28 +280,21 @@ class _DashboardWithPackagesScreenState extends State<DashboardWithPackagesScree
               color: Color(0xFF1B1E28),
             ),
           ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              Text(
-                change,
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.green,
+          if (change.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Text(
+                  change,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: color,
+                  ),
                 ),
-              ),
-              const SizedBox(width: 4),
-              const Text(
-                'vs last month',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                  color: Color(0xFF7D848D),
-                ),
-              ),
-            ],
-          ),
+              ],
+            ),
+          ],
         ],
       ),
     );

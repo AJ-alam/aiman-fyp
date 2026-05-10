@@ -114,7 +114,8 @@ router.patch("/complaints/:id/respond", protect, role("OWNER"), async (req, res)
     const complaint = await Complaint.findById(req.params.id);
     if (!complaint) return res.status(404).json({ success: false, message: "Complaint not found" });
 
-    complaint.adminResponse = response;
+    complaint.ownerResponse = response;
+    complaint.adminResponse = response; // keep both in sync
     complaint.status = "RESOLVED";
     await complaint.save();
 

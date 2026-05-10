@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 import '../widgets/side_navigation.dart';
+import '../services/refund_service.dart';
 
 class RefundRequestsScreen extends StatefulWidget {
   const RefundRequestsScreen({Key? key}) : super(key: key);
@@ -13,71 +14,65 @@ class _RefundRequestsScreenState extends State<RefundRequestsScreen>
     with SingleTickerProviderStateMixin {
   int _selectedNavIndex = 9;
   late TabController _tabController;
+  bool _isLoading = true;
 
-  // Dummy refund requests
-  final List<Map<String, dynamic>> _requests = [
-    {
-      'id': '1',
-      'user': 'Aimen Nadeem',
-      'contact': '03135766158',
-      'email': 'aaiman@gmail.com',
-      'package': 'Nathia Gali Adventure',
-      'date': '10-2-2025',
-      'amount': 15000,
-      'reason': 'Personal emergency',
-      'status': 'pending',
-    },
-    {
-      'id': '2',
-      'user': 'Ahmed Khan',
-      'contact': '03001234567',
-      'email': 'ahmed@gmail.com',
-      'package': 'Hunza Valley Trip',
-      'date': '10-2-2025',
-      'amount': 25000,
-      'reason': 'Trip cancelled due to weather',
-      'status': 'pending',
-    },
-    {
-      'id': '3',
-      'user': 'Sara Ali',
-      'contact': '03211234567',
-      'email': 'sara@gmail.com',
-      'package': 'Lahore City Tour',
-      'date': '8-2-2025',
-      'amount': 8000,
-      'reason': 'Change of plans',
-      'status': 'pending',
-    },
-    {
-      'id': '4',
-      'user': 'Usman Tariq',
-      'contact': '03451234567',
-      'email': 'usman@gmail.com',
-      'package': 'Swat Valley Tour',
-      'date': '5-2-2025',
-      'amount': 12000,
-      'reason': 'Medical emergency',
-      'status': 'accepted',
-    },
-    {
-      'id': '5',
-      'user': 'Fatima Zahra',
-      'contact': '03111234567',
-      'email': 'fatima@gmail.com',
-      'package': 'Murree Trip',
-      'date': '1-2-2025',
-      'amount': 9000,
-      'reason': 'Visa issues',
-      'status': 'rejected',
-      'rejectionReason': 'Trip already commenced',
-    },
-  ];
+  // Refund requests loaded from API
+  List<Map<String, dynamic>> _requests = [];
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+    _loadRefundRequests();
+  }
+
+  Future<void> _loadRefundRequests() async {
+    setState(() => _isLoading = true);
+    final requests = await RefundService.getRefundRequests();
+    if (mounted) {
+      setState(() {
+        _requests = requests.map((r) {
+          // Normalize API response to match UI expectations
+          final user = r['userId'] is Map ? r['userId'] : {};
+          final pkg = r['packageId'] is Map ? r['packageId'] : {};
+          return {
+            'id': r['_id'] ?? '',
+            'user': user['fullName'] ?? 'Unknown User',
+            'contact': user['phone'] ?? 'N/A',
+            'email': user['email'] ?? 'N/A',
+            'package': pkg['title'] ?? 'Unknown Package',
+            'date': r['createdAt'] != null
+                ? _formatDate(r['createdAt'])
+                : 'N/A',
+            'amount': (r['totalAmount'] ?? 0).toDouble(),
+            'reason': r['cancellationReason'] ?? 'No reason provided',
+            'status': _mapStatus(r['refundStatus']),
+            'rejectionReason': null,
+          };
+        }).toList();
+        _isLoading = false;
+      });
+    }
+  }
+
+  String _mapStatus(String? refundStatus) {
+    switch (refundStatus) {
+      case 'APPROVED':
+        return 'accepted';
+      case 'REJECTED':
+        return 'rejected';
+      default:
+        return 'pending';
+    }
+  }
+
+  String _formatDate(String isoDate) {
+    try {
+      final dt = DateTime.parse(isoDate);
+      return '${dt.day}-${dt.month}-${dt.year}';
+    } catch (_) {
+      return isoDate;
+    }
   }
 
   @override
@@ -93,17 +88,28 @@ class _RefundRequestsScreenState extends State<RefundRequestsScreen>
   List<Map<String, dynamic>> get _rejectedRequests =>
       _requests.where((r) => r['status'] == 'rejected').toList();
 
-  void _acceptRequest(String id) {
-    setState(() {
-      final index = _requests.indexWhere((r) => r['id'] == id);
-      if (index != -1) _requests[index]['status'] = 'accepted';
-    });
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Refund request accepted!'),
-        backgroundColor: Colors.green,
-      ),
-    );
+  void _acceptRequest(String id) async {
+    final success = await RefundService.approveRefund(id);
+    if (success) {
+      await _loadRefundRequests();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Refund request accepted!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to approve refund'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   void _showRejectDialog(String id) {
@@ -187,25 +193,34 @@ class _RefundRequestsScreenState extends State<RefundRequestsScreen>
                   const SizedBox(width: 12),
                   Expanded(
                     child: ElevatedButton(
-                      onPressed: () {
+                      onPressed: () async {
                         Navigator.pop(context);
-                        setState(() {
-                          final index = _requests
-                              .indexWhere((r) => r['id'] == id);
-                          if (index != -1) {
-                            _requests[index]['status'] = 'rejected';
-                            _requests[index]['rejectionReason'] =
-                                reasonController.text.isNotEmpty
-                                    ? reasonController.text
-                                    : 'No reason provided';
-                          }
-                        });
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Refund request rejected'),
-                            backgroundColor: Colors.red,
-                          ),
+                        final success = await RefundService.rejectRefund(
+                          id,
+                          reason: reasonController.text.isNotEmpty
+                              ? reasonController.text
+                              : 'No reason provided',
                         );
+                        if (success) {
+                          await _loadRefundRequests();
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Refund request rejected'),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                          }
+                        } else {
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Failed to reject refund'),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                          }
+                        }
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.red,
@@ -232,7 +247,9 @@ class _RefundRequestsScreenState extends State<RefundRequestsScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
-      body: Row(
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : Row(
         children: [
           SideNavigation(
             selectedIndex: _selectedNavIndex,

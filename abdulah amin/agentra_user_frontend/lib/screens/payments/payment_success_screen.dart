@@ -31,12 +31,12 @@ class PaymentSuccessScreen extends StatelessWidget {
               ),
               const SizedBox(height: 32),
               const Text(
-                'Payment successful',
+                'Booking Confirmed!',
                 style: AppTextStyles.headingMedium,
               ),
               const SizedBox(height: 12),
               Text(
-                'Your payment has been processed successfully',
+                'Your booking has been confirmed and payment processed successfully.',
                 textAlign: TextAlign.center,
                 style: AppTextStyles.bodyMedium.copyWith(
                   color: AppColors.textSecondary,
@@ -44,7 +44,17 @@ class PaymentSuccessScreen extends StatelessWidget {
               ),
               const SizedBox(height: 48),
               CustomButton(
-                text: 'Go to Homepage',
+                text: 'View My Bookings',
+                onPressed: () {
+                  Navigator.pushNamedAndRemoveUntil(
+                    context,
+                    '/bookings',
+                    (route) => route.settings.name == '/home' || route.isFirst,
+                  );
+                },
+              ),
+              const SizedBox(height: 16),
+              TextButton(
                 onPressed: () {
                   Navigator.pushNamedAndRemoveUntil(
                     context,
@@ -52,6 +62,13 @@ class PaymentSuccessScreen extends StatelessWidget {
                     (route) => false,
                   );
                 },
+                child: Text(
+                  'Go to Homepage',
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ),
             ],
           ),

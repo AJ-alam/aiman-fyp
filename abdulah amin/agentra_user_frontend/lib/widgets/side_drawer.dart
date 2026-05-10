@@ -20,6 +20,8 @@ class _SideDrawerState extends State<SideDrawer> {
   }
 
   Future<void> _loadUser() async {
+    // Always fetch fresh data (clearCache ensures no stale data)
+    AuthService.clearCache();
     final user = await AuthService.getCurrentUser();
     if (mounted) {
       setState(() => _user = user);

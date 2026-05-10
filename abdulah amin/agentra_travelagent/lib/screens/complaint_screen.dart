@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:typed_data';
@@ -6,6 +7,8 @@ import '../widgets/side_navigation.dart';
 import '../widgets/custom_input.dart';
 import '../widgets/custom_button.dart';
 import '../services/auth_service.dart';
+import 'package:http/http.dart' as http;
+import '../config/api_config.dart';
 
 class ComplaintScreen extends StatefulWidget {
   const ComplaintScreen({Key? key}) : super(key: key);
@@ -76,12 +79,48 @@ class _ComplaintScreenState extends State<ComplaintScreen> {
 
     setState(() => _isLoading = true);
 
-    // Simulate API call
-    await Future.delayed(const Duration(seconds: 2));
+    try {
+      final token = await AuthService.getToken();
+      if (token == null) {
+        setState(() => _isLoading = false);
+        return;
+      }
 
-    setState(() => _isLoading = false);
+      final response = await http.post(
+        Uri.parse('${ApiConfig.BASE_URL}/api/complaints/agent'),
+        headers: {
+          'Content-Type': 'application/json',
+          'x-auth-token': token,
+        },
+        body: jsonEncode({
+          'subject': _subjectController.text.trim(),
+          'description': _descriptionController.text.trim(),
+        }),
+      );
 
-    if (mounted) _showSuccessDialog();
+      setState(() => _isLoading = false);
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        if (mounted) _showSuccessDialog();
+      } else {
+        final data = jsonDecode(response.body);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(data['message'] ?? 'Failed to submit complaint'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      setState(() => _isLoading = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+        );
+      }
+    }
   }
 
   void _showSuccessDialog() {

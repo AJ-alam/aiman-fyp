@@ -230,7 +230,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Widget _buildTripCard(Booking booking) {
     return Container(
-      width: 140,
+      width: 160,
       margin: const EdgeInsets.only(right: 12),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -247,7 +247,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            height: 100,
+            height: 90,
             decoration: BoxDecoration(
               color: AppColors.backgroundLight,
               borderRadius: const BorderRadius.vertical(
@@ -267,7 +267,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 : null,
           ),
           Padding(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(10),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -275,19 +275,55 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   booking.packageTitle,
                   style: AppTextStyles.bodyMedium.copyWith(
                     fontWeight: FontWeight.w600,
+                    fontSize: 13,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 2),
                 Text(
                   booking.travelDate,
                   style: AppTextStyles.bodySmall.copyWith(
                     color: AppColors.textSecondary,
+                    fontSize: 11,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
+                const SizedBox(height: 6),
+                // Write a Review button for completed bookings
+                if (booking.status.toLowerCase() == 'completed')
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.pushNamed(
+                          context,
+                          '/write-review',
+                          arguments: {
+                            'packageId': booking.packageId,
+                            'packageTitle': booking.packageTitle,
+                          },
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        padding: const EdgeInsets.symmetric(vertical: 6),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        minimumSize: const Size(0, 30),
+                      ),
+                      child: const Text(
+                        'Write Review',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ),
               ],
             ),
           ),

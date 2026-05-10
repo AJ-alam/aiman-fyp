@@ -48,7 +48,6 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> {
 
   void _showDetailDialog(Complaint complaint) {
     final bool isResolved = complaint.status == 'RESOLVED';
-    showDialog(
       context: context,
       builder: (context) => Dialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -103,7 +102,7 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> {
                   style: const TextStyle(fontSize: 14, color: Color(0xFF4A4A4A), height: 1.6),
                 ),
               ),
-              if (isResolved && complaint.adminResponse != null) ...[
+              if (isResolved && complaint.adminResponse != null && complaint.adminResponse!.isNotEmpty) ...[
                 const SizedBox(height: 16),
                 const Text('Admin Response',
                     style: TextStyle(
@@ -186,8 +185,6 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> {
   Widget build(BuildContext context) {
     final pending = _complaints.where((c) => c.status != 'RESOLVED').length;
     final resolved = _complaints.where((c) => c.status == 'RESOLVED').length;
-
-    return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
         backgroundColor: Colors.white,

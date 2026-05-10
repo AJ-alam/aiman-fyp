@@ -22,6 +22,9 @@ class ApiConfig {
   static const String UPDATE_AGENT_PROFILE = '$BASE_URL/api/auth/agent/profile';
   static const String AGENT_DASHBOARD = '$BASE_URL/api/dashboard/agent';
   static const String AGENT_PERFORMANCE = '$BASE_URL/api/dashboard/agent';
+  static const String AGENT_COMPLAINTS = '$BASE_URL/api/agents/complaints';
+  static const String AGENT_BOOKINGS = '$BASE_URL/api/agents/bookings';
+  static const String AGENT_REFUNDS = '$BASE_URL/api/refund/agent';
 
   // ===== ADMIN ENDPOINTS =====
   static const String OWNER_LOGIN = '$BASE_URL/api/auth/owner/login';

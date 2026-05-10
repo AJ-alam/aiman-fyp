@@ -4,8 +4,8 @@ exports.getAllComplaints = async (req, res) => {
   try {
     console.log("📋 [ADMIN] Fetching all complaints...");
     const complaints = await Complaint.find()
-      .populate('userId', 'fullName email')
-      .populate('agentId', 'fullName email')
+      .populate('userId', 'fullName email role')
+      .populate('agentId', 'fullName email businessName')
       .populate('bookingId')
       .sort({ createdAt: -1 });
 

@@ -212,4 +212,10 @@ class AuthService {
   static bool isLoggedIn() {
     return _token != null;
   }
+
+  /// Clears the in-memory user cache so the next call to getCurrentUser()
+  /// fetches fresh data from the server.
+  static void clearCache() {
+    _currentUser = null;
+  }
 }

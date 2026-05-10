@@ -1,9 +1,44 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/star_rating.dart';
+import '../../services/review_service.dart';
+import '../../models/review.dart';
 
-class ReviewsScreen extends StatelessWidget {
+class ReviewsScreen extends StatefulWidget {
   const ReviewsScreen({super.key});
+
+  @override
+  State<ReviewsScreen> createState() => _ReviewsScreenState();
+}
+
+class _ReviewsScreenState extends State<ReviewsScreen> {
+  List<Review> _reviews = [];
+  bool _isLoading = true;
+  String? _packageId;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final args = ModalRoute.of(context)?.settings.arguments;
+    if (args is String && _packageId == null) {
+      _packageId = args;
+      _loadReviews();
+    } else if (_packageId == null) {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _loadReviews() async {
+    if (_packageId == null) return;
+    setState(() => _isLoading = true);
+    final reviews = await ReviewService.getPackageReviews(_packageId!);
+    if (mounted) {
+      setState(() {
+        _reviews = reviews;
+        _isLoading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -20,23 +55,76 @@ class ReviewsScreen extends StatelessWidget {
           'Reviews',
           style: AppTextStyles.headingSmall,
         ),
+        actions: [
+          if (_packageId != null)
+            TextButton.icon(
+              onPressed: () async {
+                final result = await Navigator.pushNamed(
+                  context,
+                  '/write-review',
+                  arguments: {
+                    'packageId': _packageId,
+                    'packageTitle': 'This Package',
+                  },
+                );
+                if (result == true) _loadReviews();
+              },
+              icon: const Icon(Icons.add, size: 18),
+              label: const Text('Write'),
+            ),
+        ],
       ),
-      body: ListView.builder(
-        padding: const EdgeInsets.all(16),
-        itemCount: 5,
-        itemBuilder: (context, index) {
-          return _buildReviewCard(
-            'John Doe',
-            4.5,
-            'Amazing experience! The trip was well organized and the guide was very knowledgeable.',
-            '2 days ago',
-          );
-        },
-      ),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : _reviews.isEmpty
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.star_border,
+                          size: 64, color: Colors.black26),
+                      const SizedBox(height: 16),
+                      const Text('No reviews yet',
+                          style: AppTextStyles.bodyMedium),
+                      const SizedBox(height: 8),
+                      if (_packageId != null)
+                        ElevatedButton(
+                          onPressed: () async {
+                            final result = await Navigator.pushNamed(
+                              context,
+                              '/write-review',
+                              arguments: {
+                                'packageId': _packageId,
+                                'packageTitle': 'This Package',
+                              },
+                            );
+                            if (result == true) _loadReviews();
+                          },
+                          style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.primary),
+                          child: const Text('Be the first to review',
+                              style: TextStyle(color: Colors.white)),
+                        ),
+                    ],
+                  ),
+                )
+              : RefreshIndicator(
+                  onRefresh: _loadReviews,
+                  child: ListView.builder(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: _reviews.length,
+                    itemBuilder: (context, index) {
+                      return _buildReviewCard(_reviews[index]);
+                    },
+                  ),
+                ),
     );
   }
 
-  Widget _buildReviewCard(String name, double rating, String review, String time) {
+  Widget _buildReviewCard(Review review) {
+    final name = review.userName.isNotEmpty ? review.userName : 'Anonymous';
+    final timeAgo = _formatDate(review.createdAt);
+
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(16),
@@ -59,13 +147,19 @@ class ReviewsScreen extends StatelessWidget {
               CircleAvatar(
                 radius: 20,
                 backgroundColor: AppColors.primary.withOpacity(0.1),
-                child: Text(
-                  name[0],
-                  style: AppTextStyles.bodyMedium.copyWith(
-                    color: AppColors.primary,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
+                backgroundImage: (review.userImage != null &&
+                        review.userImage!.isNotEmpty)
+                    ? NetworkImage(review.userImage!)
+                    : null,
+                child: (review.userImage == null || review.userImage!.isEmpty)
+                    ? Text(
+                        name[0].toUpperCase(),
+                        style: AppTextStyles.bodyMedium.copyWith(
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      )
+                    : null,
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -79,28 +173,46 @@ class ReviewsScreen extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 2),
-                    StarRating(rating: rating, size: 14, showRating: false),
+                    StarRating(
+                        rating: review.rating.toDouble(),
+                        size: 14,
+                        showRating: false),
                   ],
                 ),
               ),
               Text(
-                time,
+                timeAgo,
                 style: AppTextStyles.bodySmall.copyWith(
                   color: AppColors.textTertiary,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 12),
-          Text(
-            review,
-            style: AppTextStyles.bodyMedium.copyWith(
-              color: AppColors.textSecondary,
-              height: 1.5,
+          if (review.comment.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Text(
+              review.comment,
+              style: AppTextStyles.bodyMedium.copyWith(
+                color: AppColors.textSecondary,
+                height: 1.5,
+              ),
             ),
-          ),
+          ],
         ],
       ),
     );
+  }
+
+  String _formatDate(DateTime date) {
+    final diff = DateTime.now().difference(date);
+    if (diff.inDays > 30) {
+      return '${date.day}/${date.month}/${date.year}';
+    } else if (diff.inDays > 0) {
+      return '${diff.inDays}d ago';
+    } else if (diff.inHours > 0) {
+      return '${diff.inHours}h ago';
+    } else {
+      return 'Just now';
+    }
   }
 }

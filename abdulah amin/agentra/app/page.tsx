@@ -834,7 +834,19 @@ export default function Home() {
                           </td>
                           <td className="px-10 py-8">
                             {complaint.status !== 'RESOLVED' && (
-                              <button className="px-6 py-3 bg-[#007AFF] text-white rounded-xl font-bold text-sm hover:shadow-lg hover:shadow-blue-200 transition-all">
+                              <button
+                                onClick={async () => {
+                                  const response = prompt('Enter your response to this complaint:');
+                                  if (!response) return;
+                                  try {
+                                    await adminService.respondToComplaint(complaint._id, response);
+                                    alert('Complaint resolved successfully!');
+                                    await loadComplaints();
+                                  } catch (err: any) {
+                                    alert(`Failed: ${err.message}`);
+                                  }
+                                }}
+                                className="px-6 py-3 bg-[#007AFF] text-white rounded-xl font-bold text-sm hover:shadow-lg hover:shadow-blue-200 transition-all">
                                 Respond
                               </button>
                             )}

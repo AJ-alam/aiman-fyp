@@ -91,6 +91,7 @@ export default function ComplaintsPage() {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-gray-50/50">
+                  <th className="px-10 py-6 text-[#7D848D] font-bold uppercase tracking-widest text-xs">Filed By</th>
                   <th className="px-10 py-6 text-[#7D848D] font-bold uppercase tracking-widest text-xs">Complaint</th>
                   <th className="px-10 py-6 text-[#7D848D] font-bold uppercase tracking-widest text-xs">Status</th>
                   <th className="px-10 py-6 text-[#7D848D] font-bold uppercase tracking-widest text-xs">Action</th>
@@ -99,7 +100,7 @@ export default function ComplaintsPage() {
               <tbody className="divide-y divide-gray-50">
                 {complaints.length === 0 ? (
                   <tr>
-                    <td colSpan={3} className="px-10 py-20 text-center text-gray-400 font-medium">
+                    <td colSpan={4} className="px-10 py-20 text-center text-gray-400 font-medium">
                       ✓ No complaints found. All customer issues have been resolved!
                     </td>
                   </tr>
@@ -108,12 +109,27 @@ export default function ComplaintsPage() {
                     <tr key={complaint._id} className="hover:bg-gray-50/30 transition-colors">
                       <td className="px-10 py-8">
                         <div className="flex flex-col">
+                          <span className="font-bold text-sm">
+                            {complaint.userId?.fullName || 'Unknown'}
+                          </span>
+                          <span className="text-[#7D848D] text-xs">
+                            {complaint.userId?.email || ''}
+                          </span>
+                          {complaint.agentId && (
+                            <span className="text-xs text-blue-600 mt-1">
+                              Agent: {complaint.agentId?.businessName || complaint.agentId?.fullName}
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-10 py-8">
+                        <div className="flex flex-col">
                           <span className="font-bold text-lg">{complaint.subject}</span>
                           <span className="text-[#7D848D] text-sm line-clamp-2">{complaint.description}</span>
-                          {complaint.adminResponse && (
+                          {(complaint.ownerResponse || complaint.adminResponse) && (
                             <div className="mt-2 p-3 bg-green-50 rounded-lg border border-green-100">
                               <p className="text-xs font-bold text-green-800 uppercase tracking-wider">Admin Response:</p>
-                              <p className="text-sm text-green-700">{complaint.adminResponse}</p>
+                              <p className="text-sm text-green-700">{complaint.ownerResponse || complaint.adminResponse}</p>
                             </div>
                           )}
                         </div>

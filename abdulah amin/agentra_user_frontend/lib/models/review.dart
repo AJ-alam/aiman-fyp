@@ -3,6 +3,7 @@ class Review {
   final String packageId;
   final String userId;
   final String userName;
+  final String? userImage;
   final int rating;
   final String comment;
   final DateTime createdAt;
@@ -12,18 +13,23 @@ class Review {
     required this.packageId,
     required this.userId,
     required this.userName,
+    this.userImage,
     required this.rating,
     required this.comment,
     required this.createdAt,
   });
 
   factory Review.fromJson(Map<String, dynamic> json) {
+    final userObj = json['userId'] is Map ? json['userId'] : null;
     return Review(
       id: json['_id'] ?? json['id'] ?? '',
-      packageId: json['packageId'] ?? '',
-      userId: json['userId'] ?? json['user']?['_id'] ?? '',
-      userName: json['userName'] ?? json['user']?['fullName'] ?? 'Anonymous',
-      rating: json['rating'] ?? 5,
+      packageId: json['packageId'] is Map
+          ? (json['packageId']['_id'] ?? '')
+          : (json['packageId'] ?? ''),
+      userId: userObj?['_id'] ?? json['userId'] ?? '',
+      userName: userObj?['fullName'] ?? json['userName'] ?? 'Anonymous',
+      userImage: userObj?['profileImage'],
+      rating: (json['rating'] ?? 5).toInt(),
       comment: json['comment'] ?? '',
       createdAt: json['createdAt'] != null
           ? DateTime.parse(json['createdAt'])
@@ -37,6 +43,7 @@ class Review {
       'packageId': packageId,
       'userId': userId,
       'userName': userName,
+      'userImage': userImage,
       'rating': rating,
       'comment': comment,
       'createdAt': createdAt.toIso8601String(),

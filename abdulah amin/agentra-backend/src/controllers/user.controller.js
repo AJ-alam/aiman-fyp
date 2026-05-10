@@ -113,21 +113,38 @@ exports.getUserReviews = async (req, res) => {
 
 // ================= COMPLAINTS =================
 exports.raiseComplaint = async (req, res) => {
-  const { bookingId, subject, description } = req.body;
+  try {
+    const { bookingId, subject, description } = req.body;
 
-  const complaint = await Complaint.create({
-    userId: req.user.id,
-    bookingId,
-    subject,
-    description
-  });
+    // Derive agentId from the booking so complaint is routed to the correct agent
+    let agentId;
+    if (bookingId) {
+      const booking = await Booking.findById(bookingId);
+      if (booking) agentId = booking.agentId;
+    }
 
-  res.status(201).json({ success: true, complaint });
+    const complaint = await Complaint.create({
+      userId: req.user.id,
+      agentId,
+      bookingId,
+      subject,
+      description
+    });
+
+    res.status(201).json({ success: true, complaint });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
 };
 
 exports.getUserComplaints = async (req, res) => {
-  const complaints = await Complaint.find({ userId: req.user.id });
-  res.json({ success: true, complaints });
+  try {
+    const complaints = await Complaint.find({ userId: req.user.id })
+      .sort({ createdAt: -1 });
+    res.json({ success: true, complaints });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
 };
 
 // ================= AI PREFERENCES =================

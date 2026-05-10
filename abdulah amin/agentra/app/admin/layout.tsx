@@ -31,8 +31,8 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
     { name: 'Dashboard', icon: '🏠', href: '/admin', section: 'dashboard' },
     { name: 'Agents', icon: '👤', href: '/admin/agents', section: 'agents' },
     { name: 'Complaints', icon: '⚠️', href: '/admin/complaints', section: 'complaints' },
-    { name: 'System Logs', icon: '📝', href: '/admin/logs', section: 'logs' },
-    { name: 'Analytics', icon: '📊', href: '/admin/analytics', section: 'analytics' }
+    { name: 'Payments', icon: '💳', href: '/admin/payments', section: 'payments' },
+    { name: 'Analytics', icon: '📊', href: '/admin/analytics', section: 'analytics' },
   ];
 
   if (isLoading) {

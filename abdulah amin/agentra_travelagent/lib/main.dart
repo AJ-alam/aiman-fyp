@@ -23,6 +23,7 @@ import 'screens/owner_agent_verification_screen.dart';
 import 'screens/owner_manage_accounts_screen.dart';
 import 'screens/owner_complaints_screen.dart';
 import 'screens/owner_financial_screen.dart';
+import 'screens/agent_complaints_screen.dart';
 
 void main() {
   runApp(const AgentraAgentPortal());
@@ -74,6 +75,7 @@ class AgentraAgentPortal extends StatelessWidget {
         '/owner-manage-accounts': (context) => const OwnerManageAccountsScreen(),
         '/owner-complaints': (context) => const OwnerComplaintsScreen(),
         '/owner-financial': (context) => const OwnerFinancialScreen(),
+        '/agent-complaints': (context) => const AgentComplaintsScreen(),
               },
     );
   }

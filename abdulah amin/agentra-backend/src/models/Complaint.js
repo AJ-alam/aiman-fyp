@@ -41,6 +41,12 @@ const complaintSchema = new mongoose.Schema({
   ownerResponse: {
     type: String,
     default: ''
+  },
+
+  // Alias kept for frontend compatibility
+  adminResponse: {
+    type: String,
+    default: ''
   }
 
 }, { timestamps: true });

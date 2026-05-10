@@ -153,6 +153,16 @@ _buildNavItem(
     Navigator.pushNamed(context, '/complaint');
   },
 ),
+_buildNavItem(
+  context,
+  icon: Icons.inbox_outlined,
+  label: 'My Complaints',
+  index: 11,
+  onTap: () {
+    widget.onItemSelected(11);
+    Navigator.pushNamed(context, '/agent-complaints');
+  },
+),
                _buildNavItem(
   context,
   icon: Icons.bar_chart_outlined,

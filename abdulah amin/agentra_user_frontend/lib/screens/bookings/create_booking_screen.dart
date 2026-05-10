@@ -74,21 +74,21 @@ class _CreateBookingScreenState extends State<CreateBookingScreen> {
       final success = result['success'] as bool;
       final message = result['message'] as String;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(message),
-          backgroundColor: success ? Colors.green : Colors.red,
-          duration: const Duration(seconds: 4),
-        ),
-      );
-
       if (success) {
-        // Go back twice if we came from JazzCash, once otherwise
-        if (_paymentMethod == 'JAZZCASH') {
-          Navigator.of(context).popUntil((route) => route.settings.name == '/package-detail');
-        } else {
-          Navigator.pop(context, true);
-        }
+        // Navigate to payment success screen, clearing the booking stack
+        Navigator.pushNamedAndRemoveUntil(
+          context,
+          '/payment-success',
+          (route) => route.settings.name == '/home' || route.isFirst,
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(message),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 4),
+          ),
+        );
       }
     }
   }

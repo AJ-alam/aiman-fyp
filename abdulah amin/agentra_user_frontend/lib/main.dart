@@ -30,6 +30,7 @@ import 'screens/complaints/file_complaint_screen.dart';
 import 'screens/refunds/refund_request_screen.dart';
 import 'screens/refunds/refund_success_screen.dart';
 import 'screens/chatbot/chatbot_screen.dart';
+import 'screens/reviews/write_review_screen.dart';
 import 'screens/bookings/create_booking_screen.dart';
 import 'screens/promotions/promotions_screen.dart';
 
@@ -115,6 +116,15 @@ class AgentraApp extends StatelessWidget {
           }
           return MaterialPageRoute(
             builder: (context) => CreateBookingScreen(package: package),
+          );
+        }
+        if (settings.name == '/write-review') {
+          final args = settings.arguments as Map<String, dynamic>?;
+          return MaterialPageRoute(
+            builder: (context) => WriteReviewScreen(
+              packageId: args?['packageId'] ?? '',
+              packageTitle: args?['packageTitle'] ?? 'Package',
+            ),
           );
         }
         return null;
