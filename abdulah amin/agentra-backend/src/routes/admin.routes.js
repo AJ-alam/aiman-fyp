@@ -32,22 +32,26 @@ router.patch("/approve-agent/:id", protect, role("OWNER"), async (req, res) => {
   try {
     console.log(`🔄 [ADMIN] Approving agent: ${req.params.id}`);
     
-    const agent = await Agent.findById(req.params.id);
+    const agent = await Agent.findByIdAndUpdate(
+      req.params.id,
+      { 
+        status: "APPROVED",
+        isVerified: true,
+        emailVerified: true 
+      },
+      { new: true }
+    );
 
     if (!agent) {
-      console.warn(`⚠️ [ADMIN] Agent not found: ${req.params.id}`);
+      console.log(`❌ [ADMIN] Agent not found during approval: ${req.params.id}`);
       return res.status(404).json({
         success: false,
         message: "Agent not found"
       });
     }
 
-    agent.status = "APPROVED";
-    agent.isVerified = true;
-    agent.emailVerified = true;
-    await agent.save();
+    console.log(`✅ [ADMIN] Agent approved successfully: ${agent._id} | Status: ${agent.status}`);
 
-    console.log(`✅ [ADMIN] Agent approved successfully: ${agent._id}`);
     res.json({
       success: true,
       message: "Agent approved successfully",
@@ -62,27 +66,34 @@ router.patch("/approve-agent/:id", protect, role("OWNER"), async (req, res) => {
     console.error("❌ [ADMIN] Error approving agent:", error.message);
     res.status(500).json({
       success: false,
-      message: "Failed to approve agent",
+      message: "Internal server error during approval",
       error: error.message
     });
   }
 });
 
-// =============== REJECT AGENT ===============
+// @route   PATCH /api/admin/reject-agent/:id
+// @desc    Reject an agent request
 router.patch("/reject-agent/:id", protect, role("OWNER"), async (req, res) => {
   try {
     const { reason } = req.body;
     console.log(`🔄 [ADMIN] Rejecting agent: ${req.params.id}. Reason: ${reason}`);
-    
-    const agent = await Agent.findById(req.params.id);
+
+    const agent = await Agent.findByIdAndUpdate(
+      req.params.id,
+      { 
+        status: "REJECTED",
+        rejectionReason: reason || "No reason provided"
+      },
+      { new: true }
+    );
 
     if (!agent) {
-      return res.status(404).json({ success: false, message: "Agent not found" });
+      return res.status(404).json({
+        success: false,
+        message: "Agent not found"
+      });
     }
-
-    agent.status = "REJECTED";
-    agent.rejectionReason = reason || "No reason provided";
-    await agent.save();
 
     res.json({
       success: true,
@@ -94,7 +105,10 @@ router.patch("/reject-agent/:id", protect, role("OWNER"), async (req, res) => {
     });
   } catch (error) {
     console.error("❌ [ADMIN] Error rejecting agent:", error.message);
-    res.status(500).json({ success: false, message: "Failed to reject agent" });
+    res.status(500).json({
+      success: false,
+      message: "Internal server error during rejection"
+    });
   }
 });
 

@@ -48,6 +48,7 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> {
 
   void _showDetailDialog(Complaint complaint) {
     final bool isResolved = complaint.status == 'RESOLVED';
+    showDialog(
       context: context,
       builder: (context) => Dialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -185,6 +186,7 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> {
   Widget build(BuildContext context) {
     final pending = _complaints.where((c) => c.status != 'RESOLVED').length;
     final resolved = _complaints.where((c) => c.status == 'RESOLVED').length;
+    return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
         backgroundColor: Colors.white,

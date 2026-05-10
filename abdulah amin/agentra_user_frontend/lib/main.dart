@@ -83,7 +83,6 @@ class AgentraApp extends StatelessWidget {
         '/payment-success': (context) => const PaymentSuccessScreen(),
         '/payment-history': (context) => const PaymentHistoryScreen(),
         '/reviews': (context) => const ReviewsScreen(),
-        '/rate-trip': (context) => const RateTripScreen(),
         '/favorites': (context) => const FavoritesScreen(),
         '/support-chat': (context) => const SupportChatScreen(),
         '/complaint': (context) => const ComplaintsScreen(),
@@ -124,6 +123,14 @@ class AgentraApp extends StatelessWidget {
             builder: (context) => WriteReviewScreen(
               packageId: args?['packageId'] ?? '',
               packageTitle: args?['packageTitle'] ?? 'Package',
+            ),
+          );
+        }
+        if (settings.name == '/rate-trip') {
+          final packageId = settings.arguments as String?;
+          return MaterialPageRoute(
+            builder: (context) => RateTripScreen(
+              packageId: packageId ?? '',
             ),
           );
         }

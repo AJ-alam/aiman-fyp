@@ -127,6 +127,8 @@ const loginAgent = async (req, res) => {
     }
 
     const isMatch = await bcrypt.compare(password, agent.password);
+    console.log(`🔑 [LOGIN] Agent: ${email} | Found: true | Status: ${agent.status} | Password Match: ${isMatch}`);
+
     if (!isMatch) {
       return res.status(400).json({ success: false, message: 'Invalid credentials' });
     }
