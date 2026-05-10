@@ -633,12 +633,13 @@ export default function Home() {
                       <th className="px-10 py-6 text-[#7D848D] font-bold uppercase tracking-widest text-xs">Contact</th>
                       <th className="px-10 py-6 text-[#7D848D] font-bold uppercase tracking-widest text-xs">Status</th>
                       <th className="px-10 py-6 text-[#7D848D] font-bold uppercase tracking-widest text-xs">Joined</th>
+                      <th className="px-10 py-6 text-[#7D848D] font-bold uppercase tracking-widest text-xs text-right">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-50">
                     {allAgents.length === 0 ? (
                       <tr>
-                        <td colSpan={5} className="px-10 py-20 text-center text-gray-400 font-medium">
+                        <td colSpan={6} className="px-10 py-20 text-center text-gray-400 font-medium">
                           No agents found in the system
                         </td>
                       </tr>
@@ -675,6 +676,26 @@ export default function Home() {
                             <span className="text-[#7D848D] text-sm">
                               {agent.createdAt ? new Date(agent.createdAt).toLocaleDateString() : 'N/A'}
                             </span>
+                          </td>
+                          <td className="px-10 py-8 text-right">
+                            {agent.status === 'PENDING_APPROVAL' ? (
+                              <div className="flex items-center justify-end gap-2">
+                                <button
+                                  onClick={() => handleApproveAgent(agent._id, agent.fullName || agent.name || 'Agent')}
+                                  className="px-4 py-2 bg-[#007AFF] text-white rounded-lg font-bold text-xs hover:bg-blue-600 transition-all active:scale-95 shadow-sm"
+                                >
+                                  Approve
+                                </button>
+                                <button
+                                  onClick={() => handleRejectAgent(agent._id, agent.fullName || agent.name || 'Agent')}
+                                  className="px-4 py-2 bg-red-50 text-red-600 rounded-lg font-bold text-xs hover:bg-red-100 transition-all active:scale-95"
+                                >
+                                  Reject
+                                </button>
+                              </div>
+                            ) : (
+                              <span className="text-gray-400 text-xs font-bold uppercase tracking-widest italic">Processed</span>
+                            )}
                           </td>
                         </tr>
                       ))
