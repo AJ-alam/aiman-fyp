@@ -121,8 +121,9 @@ const loginAgent = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    const agent = await Agent.findOne({ email });
+    const agent = await Agent.findOne({ email: email.toLowerCase() });
     if (!agent) {
+      console.log(`❌ [LOGIN] Agent not found: ${email}`);
       return res.status(404).json({ success: false, message: 'Agent not found' });
     }
 
@@ -130,6 +131,7 @@ const loginAgent = async (req, res) => {
     console.log(`🔑 [LOGIN] Agent: ${email} | Found: true | Status: ${agent.status} | Password Match: ${isMatch}`);
 
     if (!isMatch) {
+      console.log(`❌ [LOGIN] Password mismatch for: ${email}`);
       return res.status(400).json({ success: false, message: 'Invalid credentials' });
     }
 
@@ -321,6 +323,7 @@ const approveAgent = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Not in pending state' });
     }
 
+    console.log('✅ UPDATING AGENT STATUS TO APPROVED...');
     const updatedAgent = await Agent.findByIdAndUpdate(
       req.params.agentId,
       { 
@@ -328,20 +331,20 @@ const approveAgent = async (req, res) => {
         isVerified: true, 
         emailVerified: true 
       },
-      { new: true }
+      { new: true, runValidators: true }
     );
 
     if (!updatedAgent) {
-      console.error('❌ APPROVE AGENT: Failed to update agent in DB');
-      return res.status(500).json({ success: false, message: 'Failed to update agent status' });
+      console.error('❌ APPROVE AGENT: Failed to find agent during update');
+      return res.status(404).json({ success: false, message: 'Agent lost during update process' });
     }
 
-    console.log('✅ AGENT APPROVED AND SAVED:', updatedAgent.email, 'Status:', updatedAgent.status);
+    console.log('✅ AGENT STATUS UPDATED SUCCESSFULLY:', updatedAgent.email, 'New Status:', updatedAgent.status);
     const { password: _, ...data } = updatedAgent.toObject();
 
     res.status(200).json({
       success: true,
-      message: 'Agent approved',
+      message: 'Agent approved and verified successfully',
       agent: data,
     });
 
