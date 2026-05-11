@@ -16,17 +16,21 @@ const registerUser = async (req, res) => {
   try {
     const { fullName, email, password, phone } = req.body;
 
-    const existing = await User.findOne({ email });
+    if (!fullName || !email || !password || !phone) {
+      return res.status(400).json({ success: false, message: 'All fields are required: fullName, email, password, phone' });
+    }
+
+    const existing = await User.findOne({ email: email.toLowerCase().trim() });
     if (existing) {
-      return res.status(400).json({ success: false, message: 'User already exists' });
+      return res.status(400).json({ success: false, message: 'An account with this email already exists' });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const user = await User.create({
-      fullName,
-      email,
-      phone,
+      fullName: fullName.trim(),
+      email: email.toLowerCase().trim(),
+      phone: phone.trim(),
       password: hashedPassword,
     });
 
@@ -36,13 +40,19 @@ const registerUser = async (req, res) => {
 
     res.status(201).json({
       success: true,
-      message: 'User registered successfully',
+      message: 'Account created successfully',
       token,
       user: userData,
     });
 
   } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
+    console.error('❌ REGISTER USER ERROR:', err.message);
+    // Handle MongoDB duplicate key errors
+    if (err.code === 11000) {
+      const field = Object.keys(err.keyPattern)[0];
+      return res.status(400).json({ success: false, message: `This ${field} is already registered` });
+    }
+    res.status(500).json({ success: false, message: 'Server error during registration. Please try again.' });
   }
 };
 
@@ -51,14 +61,24 @@ const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    const user = await User.findOne({ email });
+    if (!email || !password) {
+      return res.status(400).json({ success: false, message: 'Email and password are required' });
+    }
+
+    // Case-insensitive email lookup
+    const user = await User.findOne({ email: email.toLowerCase().trim() });
     if (!user) {
-      return res.status(404).json({ success: false, message: 'User not found' });
+      return res.status(404).json({ success: false, message: 'No account found with this email' });
+    }
+
+    // Check if account is active
+    if (!user.isActive) {
+      return res.status(403).json({ success: false, message: 'Your account has been deactivated. Please contact support.' });
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.status(400).json({ success: false, message: 'Invalid credentials' });
+      return res.status(400).json({ success: false, message: 'Incorrect password. Please try again.' });
     }
 
     const token = generateToken(user._id, user.role);
@@ -73,7 +93,8 @@ const loginUser = async (req, res) => {
     });
 
   } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
+    console.error('❌ LOGIN USER ERROR:', err.message);
+    res.status(500).json({ success: false, message: 'Server error during login. Please try again.' });
   }
 };
 
@@ -83,24 +104,28 @@ const registerAgent = async (req, res) => {
     console.log('🔥 REGISTER AGENT REQUEST BODY:', req.body);
     const { fullName, email, password, phone, businessName, cnic } = req.body;
 
-    const existing = await Agent.findOne({ email });
+    if (!fullName || !email || !password || !phone || !businessName || !cnic) {
+      return res.status(400).json({ success: false, message: 'All fields are required: fullName, email, password, phone, businessName, cnic' });
+    }
+
+    const existing = await Agent.findOne({ email: email.toLowerCase().trim() });
     if (existing) {
-      return res.status(400).json({ success: false, message: 'Agent already exists' });
+      return res.status(400).json({ success: false, message: 'An agent account with this email already exists' });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const agent = await Agent.create({
-      fullName,
-      email,
-      phone,
-      businessName,
-      cnic,
+      fullName: fullName.trim(),
+      email: email.toLowerCase().trim(),
+      phone: phone.trim(),
+      businessName: businessName.trim(),
+      cnic: cnic.trim(),
       password: hashedPassword,
       status: 'PENDING_APPROVAL',
     });
 
-    console.log('DATA SAVED:', agent);
+    console.log('✅ AGENT SAVED:', agent._id, agent.email);
     const { password: _, ...agentData } = agent.toObject();
 
     return res.status(201).json({
@@ -112,7 +137,11 @@ const registerAgent = async (req, res) => {
 
   } catch (err) {
     console.error('❌ REGISTER AGENT ERROR:', err.message, err.stack);
-    return res.status(500).json({ success: false, message: err.message });
+    if (err.code === 11000) {
+      const field = Object.keys(err.keyPattern)[0];
+      return res.status(400).json({ success: false, message: `This ${field} is already registered` });
+    }
+    return res.status(500).json({ success: false, message: 'Server error during registration. Please try again.' });
   }
 };
 

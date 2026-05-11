@@ -87,7 +87,7 @@ class _ComplaintScreenState extends State<ComplaintScreen> {
       }
 
       final response = await http.post(
-        Uri.parse('${ApiConfig.BASE_URL}/api/complaints/agent'),
+        Uri.parse('${ApiConfig.BASE_URL}/complaints/agent'),
         headers: {
           'Content-Type': 'application/json',
           'x-auth-token': token,

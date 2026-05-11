@@ -89,7 +89,7 @@ class AuthService {
     }
   }
 
-  static Future<bool> login({
+  static Future<Map<String, dynamic>> login({
     required String email,
     required String password,
     bool isAgent = false,
@@ -103,7 +103,7 @@ class AuthService {
         Uri.parse(url),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          'email': email,
+          'email': email.trim().toLowerCase(),
           'password': password,
         }),
       );
@@ -111,18 +111,25 @@ class AuthService {
       print(' Login Status: ${response.statusCode}');
       print(' Login Body: ${response.body}');
 
+      final data = jsonDecode(response.body);
+
       if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
         _token = data['token'];
         if (_token != null) {
           await _saveToken(_token!);
-          return true;
+          return {'success': true};
         }
+        return {'success': false, 'message': 'No token received from server'};
       }
-      return false;
+
+      // Return the server's error message for all non-200 responses
+      return {
+        'success': false,
+        'message': data['message'] ?? 'Login failed. Please try again.'
+      };
     } catch (e) {
       print(' Login error: $e');
-      return false;
+      return {'success': false, 'message': 'Connection error. Please check your internet.'};
     }
   }
 

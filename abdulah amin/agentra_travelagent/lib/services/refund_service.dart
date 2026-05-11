@@ -9,8 +9,9 @@ class RefundService {
       final token = await AuthService.getToken();
       if (token == null) return [];
 
+      // ApiConfig.BASE_URL already ends with /api, so no extra /api prefix
       final response = await http.get(
-        Uri.parse('${ApiConfig.BASE_URL}/api/refund/agent'),
+        Uri.parse('${ApiConfig.BASE_URL}/refund/agent'),
         headers: {
           'Content-Type': 'application/json',
           'x-auth-token': token,
@@ -34,7 +35,7 @@ class RefundService {
       if (token == null) return false;
 
       final response = await http.post(
-        Uri.parse('${ApiConfig.BASE_URL}/api/refund/approve/$bookingId'),
+        Uri.parse('${ApiConfig.BASE_URL}/refund/approve/$bookingId'),
         headers: {
           'Content-Type': 'application/json',
           'x-auth-token': token,
@@ -55,7 +56,7 @@ class RefundService {
       if (token == null) return false;
 
       final response = await http.post(
-        Uri.parse('${ApiConfig.BASE_URL}/api/refund/reject/$bookingId'),
+        Uri.parse('${ApiConfig.BASE_URL}/refund/reject/$bookingId'),
         headers: {
           'Content-Type': 'application/json',
           'x-auth-token': token,

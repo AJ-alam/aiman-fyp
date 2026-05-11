@@ -22,7 +22,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
     setState(() => _isLoading = true);
 
-    final success = await AuthService.login(
+    final result = await AuthService.login(
       email: _emailController.text.trim(),
       password: _passwordController.text,
     );
@@ -30,13 +30,15 @@ class _LoginScreenState extends State<LoginScreen> {
     if (mounted) {
       setState(() => _isLoading = false);
 
-      if (success) {
+      if (result['success'] == true) {
         Navigator.pushReplacementNamed(context, '/home');
       } else {
+        final message = result['message'] as String? ?? 'Login failed. Please check your credentials.';
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Login failed. Please check your credentials.'),
+          SnackBar(
+            content: Text(message),
             backgroundColor: AppColors.error,
+            duration: const Duration(seconds: 4),
           ),
         );
       }
