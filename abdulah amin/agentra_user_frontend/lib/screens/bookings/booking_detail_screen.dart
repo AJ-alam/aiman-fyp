@@ -233,9 +233,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              '• Cancel before 7 days: Full refund\n'
-                              '• Cancel 3–7 days before: 50% refund\n'
-                              '• Cancel within 3 days: No refund',
+                              '• Refer to agent\'s terms and conditions for specific refund policies regarding this package.',
                               style: AppTextStyles.bodySmall.copyWith(
                                 color: AppColors.textSecondary,
                               ),

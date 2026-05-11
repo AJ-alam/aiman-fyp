@@ -17,12 +17,52 @@ class PremiumPaymentScreen extends StatefulWidget {
 
 class _PremiumPaymentScreenState extends State<PremiumPaymentScreen> {
   int _selectedNavIndex = 6;
-  int _selectedPlan = 0; // 0 = Monthly, 1 = Annual
+  int _selectedPlan = 0;
   int _currentStep = 0; // 0 = Select Plan, 1 = Payment
-  bool _isLoading = false;
+  bool _isLoading = true;
+  bool _isAlreadyPro = false;
+  String _currentPlan = '';
 
   final _jazzcashNumberController = TextEditingController();
   final _cnicController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCurrentSubscription();
+  }
+
+  Future<void> _loadCurrentSubscription() async {
+    setState(() => _isLoading = true);
+    try {
+      final token = await AuthService.getToken();
+      if (token == null) {
+        setState(() => _isLoading = false);
+        return;
+      }
+
+      final response = await http.get(
+        Uri.parse('${ApiConfig.BASE_URL}/subscription/current'),
+        headers: {'x-auth-token': token},
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final sub = data['subscription'];
+        if (mounted) {
+          setState(() {
+            _isAlreadyPro = sub['isActive'] ?? false;
+            _currentPlan = sub['plan'] ?? '';
+            _isLoading = false;
+          });
+        }
+      } else {
+        if (mounted) setState(() => _isLoading = false);
+      }
+    } catch (_) {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
 
   final List<Map<String, dynamic>> _plans = [
     {
@@ -345,18 +385,21 @@ class _PremiumPaymentScreenState extends State<PremiumPaymentScreen> {
                 ),
                 // Content
                 Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(32),
-                    child: Center(
-                      child: Container(
-                        constraints:
-                            const BoxConstraints(maxWidth: 800),
-                        child: _currentStep == 0
-                            ? _buildSelectPlanStep()
-                            : _buildPaymentStep(),
-                      ),
-                    ),
-                  ),
+                  child: _isLoading
+                      ? const Center(child: CircularProgressIndicator())
+                      : SingleChildScrollView(
+                          padding: const EdgeInsets.all(32),
+                          child: Center(
+                            child: Container(
+                              constraints: const BoxConstraints(maxWidth: 800),
+                              child: _isAlreadyPro
+                                  ? _buildAlreadyProStatus()
+                                  : (_currentStep == 0
+                                      ? _buildSelectPlanStep()
+                                      : _buildPaymentStep()),
+                            ),
+                          ),
+                        ),
                 ),
               ],
             ),
@@ -744,6 +787,119 @@ class _PremiumPaymentScreenState extends State<PremiumPaymentScreen> {
                             fontWeight: FontWeight.w700,
                           ),
                         ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAlreadyProStatus() {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        const SizedBox(height: 60),
+        Container(
+          padding: const EdgeInsets.all(32),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(32),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.amber.withOpacity(0.1),
+                blurRadius: 40,
+                offset: const Offset(0, 20),
+              ),
+            ],
+            border: Border.all(color: Colors.amber.withOpacity(0.3), width: 2),
+          ),
+          child: Column(
+            children: [
+              Container(
+                width: 120,
+                height: 120,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.amber.shade700, Colors.orange.shade500],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.amber.withOpacity(0.4),
+                      blurRadius: 20,
+                      offset: const Offset(0, 10),
+                    ),
+                  ],
+                ),
+                child: const Icon(Icons.workspace_premium,
+                    color: Colors.white, size: 60),
+              ),
+              const SizedBox(height: 32),
+              const Text(
+                'Pro Premium Status',
+                style: TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.w900,
+                  color: Color(0xFF1B1E28),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                decoration: BoxDecoration(
+                  color: Colors.green.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.check_circle, color: Colors.green, size: 18),
+                    const SizedBox(width: 8),
+                    Text(
+                      'ACTIVE: ${_currentPlan == 'YEARLY' ? 'Annual Plan' : 'Monthly Plan'}',
+                      style: const TextStyle(
+                        color: Colors.green,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
+              const Text(
+                'You have full access to all AI tools and premium features. Your subscription is active and working perfectly.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Color(0xFF7D848D),
+                  fontSize: 16,
+                  height: 1.5,
+                ),
+              ),
+              const SizedBox(height: 40),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pushReplacementNamed(context, '/subscription'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    padding: const EdgeInsets.symmetric(vertical: 18),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text(
+                    'Manage Subscription',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
                 ),
               ),
             ],

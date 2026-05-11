@@ -178,7 +178,7 @@ exports.getPayoutHistory = async (req, res) => {
 
     const query = {
       agentId: agentId,
-      type: { $in: ['EARNING', 'PAYOUT'] }
+      type: { $in: ['EARNING', 'COMMISSION', 'PAYOUT', 'REFUND', 'SUBSCRIPTION'] }
     };
 
     if (status) {

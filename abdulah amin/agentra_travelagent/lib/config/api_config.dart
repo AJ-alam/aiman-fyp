@@ -38,6 +38,12 @@ class ApiConfig {
   static String updateComplaint(String id) => '$BASE_URL/complaints/$id';
 
   static const String UPLOAD_IMAGE = '$BASE_URL/upload/image';
+
+  static String getImageUrl(String? path) {
+    if (path == null || path.isEmpty) return 'https://placehold.co/600x400/e2e8f0/475569?text=No+Image';
+    if (path.startsWith('http')) return path;
+    return path; // Assuming full URL if not starting with /
+  }
 }
 
 

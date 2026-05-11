@@ -24,6 +24,8 @@ class _DashboardWithPackagesScreenState extends State<DashboardWithPackagesScree
   int _totalBookings = 0;
   double _totalEarnings = 0;
   double _averageRating = 0;
+  bool _isPro = false;
+  String _agentName = 'Agent';
 
   @override
   void initState() {
@@ -55,10 +57,13 @@ class _DashboardWithPackagesScreenState extends State<DashboardWithPackagesScree
       );
       if (profileResp.statusCode == 200) {
         final pData = jsonDecode(profileResp.body);
-        if (mounted) {
+        final agentJson = pData['agent'];
+        if (mounted && agentJson != null) {
+          final agent = Agent.fromJson(agentJson);
           setState(() {
-            _averageRating =
-                (pData['agent']?['averageRating'] ?? 0).toDouble();
+            _averageRating = agent.averageRating;
+            _isPro = agent.isPro;
+            _agentName = agent.fullName;
           });
         }
       }
@@ -94,18 +99,42 @@ class _DashboardWithPackagesScreenState extends State<DashboardWithPackagesScree
                   backgroundColor: Colors.white,
                   elevation: 0,
                   centerTitle: false,
-                  title: const Column(
+                  title: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        'Welcome back, Agent!',
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.w900,
-                          color: Color(0xFF1B1E28),
-                        ),
+                      Row(
+                        children: [
+                          Text(
+                            'Hi, $_agentName!',
+                            style: const TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.w900,
+                              color: Color(0xFF1B1E28),
+                            ),
+                          ),
+                          if (_isPro) ...[
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                gradient: const LinearGradient(
+                                  colors: [Color(0xFFFFD700), Color(0xFFFFA500)],
+                                ),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: const Text(
+                                'PRO PREMIUM',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w900,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ],
                       ),
-                      Text(
+                      const Text(
                         'Check your travel portal overview today',
                         style: TextStyle(
                           fontSize: 14,
@@ -352,15 +381,10 @@ class _DashboardWithPackagesScreenState extends State<DashboardWithPackagesScree
               margin: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(24),
-                image: (package.image != null && package.image!.isNotEmpty)
-                    ? DecorationImage(
-                        image: NetworkImage(package.image!),
-                        fit: BoxFit.cover,
-                      )
-                    : const DecorationImage(
-                        image: NetworkImage('https://images.unsplash.com/photo-1549488344-1f9b8d2bd1f3?q=80&w=1000'),
-                        fit: BoxFit.cover,
-                      ),
+                image: DecorationImage(
+                  image: NetworkImage(ApiConfig.getImageUrl(package.image)),
+                  fit: BoxFit.cover,
+                ),
               ),
               child: Stack(
                 children: [

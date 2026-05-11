@@ -34,46 +34,103 @@ class _PackagePerformanceScreenState extends State<PackagePerformanceScreen> {
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
     try {
-      // Load real packages
-      final packages = await PackageService.getAgentPackages();
-
-      // Load real dashboard data
       final token = await AuthService.getToken();
-      int totalBookings = 0;
-      if (token != null) {
-        final response = await http.get(
-          Uri.parse(ApiConfig.AGENT_DASHBOARD),
-          headers: {'x-auth-token': token},
-        );
-        if (response.statusCode == 200) {
-          final data = jsonDecode(response.body);
-          totalBookings = data['bookings'] ?? 0;
+      if (token == null) return;
+
+      // Load real analytics data
+      final response = await http.get(
+        Uri.parse(ApiConfig.AGENT_ANALYTICS),
+        headers: {'x-auth-token': token},
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final overview = data['overview'] ?? {};
+        final List<dynamic> packagesData = data['packages'] ?? [];
+
+        final List<Package> packages = [];
+        final Map<String, Map<String, dynamic>> perfData = {};
+
+        for (var item in packagesData) {
+          if (item['package'] != null) {
+            final pkg = Package.fromJson(item['package']);
+            packages.add(pkg);
+            
+            final analytics = item['analytics'] ?? {};
+            perfData[pkg.id] = {
+              'views': analytics['views'] ?? 0,
+              'clicks': analytics['clicks'] ?? 0,
+              'bookings': analytics['bookings'] ?? 0,
+              'conversionRate': (analytics['conversionRate'] ?? 0).toStringAsFixed(1),
+            };
+          }
         }
-      }
 
-      // Generate dummy performance data per package
-      final Map<String, Map<String, dynamic>> perfData = {};
-      for (int i = 0; i < packages.length; i++) {
-        perfData[packages[i].id] = {
-          'views': (i + 1) * 320 + 80,
-          'clicks': (i + 1) * 120 + 30,
-          'bookings': (i + 1) * 15 + 5,
-          'conversionRate':
-              ((((i + 1) * 15 + 5) / ((i + 1) * 120 + 30)) * 100)
-                  .toStringAsFixed(1),
-        };
-      }
-
-      if (mounted) {
-        setState(() {
-          _packages = packages;
-          _totalBookings = totalBookings;
-          _performanceData.addAll(perfData);
-          _isLoading = false;
-        });
+        if (mounted) {
+          setState(() {
+            _packages = packages;
+            _totalBookings = overview['totalBookings'] ?? 0;
+            _performanceData.clear();
+            _performanceData.addAll(perfData);
+            _isLoading = false;
+          });
+        }
+      } else {
+        if (mounted) setState(() => _isLoading = false);
       }
     } catch (e) {
+      print('Error loading analytics: $e');
       if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _downloadReport() async {
+    if (_packages.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No packages to generate report for')),
+      );
+      return;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Generating PDF Report...')),
+    );
+
+    try {
+      final token = await AuthService.getToken();
+      if (token == null) return;
+
+      // We'll use the first package as an example or provide a way to select
+      // For now, let's generate a report for the top package
+      final packageId = _topPackage?.id;
+      if (packageId == null) return;
+
+      final url = '${ApiConfig.BASE_URL}/analytics/package/$packageId/report';
+      
+      // In a real app, we'd use url_launcher or similar. 
+      // For this web/desktop demo, we'll just show a success message.
+      // But we call the endpoint to verify it works.
+      final response = await http.get(
+        Uri.parse(url),
+        headers: {'x-auth-token': token},
+      );
+
+      if (response.statusCode == 200) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Report generated for ${_topPackage!.title}!'),
+            backgroundColor: AppColors.success,
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to generate report')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
     }
   }
 
@@ -141,15 +198,10 @@ class _PackagePerformanceScreenState extends State<PackagePerformanceScreen> {
                       ),
                       // Download Report Button
                       ElevatedButton.icon(
-                        onPressed: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                                content: Text('Report download coming soon!')),
-                          );
-                        },
-                        icon: const Icon(Icons.download_outlined,
+                        onPressed: _downloadReport,
+                        icon: const Icon(Icons.picture_as_pdf_outlined,
                             color: Colors.white),
-                        label: const Text('Download Report',
+                        label: const Text('Generate Report',
                             style: TextStyle(color: Colors.white)),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.primary,
@@ -300,20 +352,12 @@ class _PackagePerformanceScreenState extends State<PackagePerformanceScreen> {
           // Package image
           ClipRRect(
             borderRadius: BorderRadius.circular(16),
-            child: package.image != null && package.image!.isNotEmpty
-                ? Image.network(
-                    package.image!,
-                    width: 100,
-                    height: 100,
-                    fit: BoxFit.cover,
-                  )
-                : Container(
-                    width: 100,
-                    height: 100,
-                    color: Colors.white.withOpacity(0.2),
-                    child: const Icon(Icons.image,
-                        color: Colors.white, size: 40),
-                  ),
+            child: Image.network(
+              ApiConfig.getImageUrl(package.image),
+              width: 100,
+              height: 100,
+              fit: BoxFit.cover,
+            ),
           ),
           const SizedBox(width: 24),
           // Package info
@@ -460,23 +504,12 @@ class _PackagePerformanceScreenState extends State<PackagePerformanceScreen> {
               // Image
               ClipRRect(
                 borderRadius: BorderRadius.circular(12),
-                child: package.image != null && package.image!.isNotEmpty
-                    ? Image.network(
-                        package.image!,
-                        width: 60,
-                        height: 60,
-                        fit: BoxFit.cover,
-                      )
-                    : Container(
-                        width: 60,
-                        height: 60,
-                        decoration: BoxDecoration(
-                          color: AppColors.backgroundGray,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: const Icon(Icons.image,
-                            color: AppColors.textTertiary),
-                      ),
+                child: Image.network(
+                  ApiConfig.getImageUrl(package.image),
+                  width: 60,
+                  height: 60,
+                  fit: BoxFit.cover,
+                ),
               ),
               const SizedBox(width: 16),
               // Title & duration

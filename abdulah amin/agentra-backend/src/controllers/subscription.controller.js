@@ -1,5 +1,6 @@
 const Subscription = require('../models/Subscription');
 const Agent = require('../models/Agent');
+const Transaction = require('../models/Transaction');
 
 const PRICES = {
   MONTHLY: 2499,
@@ -99,6 +100,20 @@ exports.subscribe = async (req, res) => {
       'aiSubscription.plan': plan,
       'aiSubscription.isActive': true,
       'aiSubscription.expiryDate': endDate
+    });
+
+    // Create a transaction record for payment history
+    await Transaction.create({
+      agentId,
+      type: 'SUBSCRIPTION',
+      amount,
+      paymentMethod: paymentMethod || 'CARD',
+      paymentDetails: {
+        transactionId: paymentId
+      },
+      processedDate: new Date(),
+      payoutStatus: 'PAID',
+      notes: `Subscription to ${plan} plan`
     });
 
     res.status(201).json({
@@ -232,6 +247,20 @@ exports.upgradeSubscription = async (req, res) => {
       'aiSubscription.plan': plan,
       'aiSubscription.isActive': true,
       'aiSubscription.expiryDate': endDate
+    });
+
+    // Create a transaction record for payment history
+    await Transaction.create({
+      agentId,
+      type: 'SUBSCRIPTION',
+      amount,
+      paymentMethod: paymentMethod || 'CARD',
+      paymentDetails: {
+        transactionId: paymentId
+      },
+      processedDate: new Date(),
+      payoutStatus: 'PAID',
+      notes: `Upgrade to ${plan} plan`
     });
 
     res.json({

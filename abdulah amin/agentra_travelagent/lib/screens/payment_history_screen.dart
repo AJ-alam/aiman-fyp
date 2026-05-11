@@ -13,94 +13,90 @@ class _PaymentHistoryScreenState extends State<PaymentHistoryScreen>
     with SingleTickerProviderStateMixin {
   int _selectedNavIndex = 5;
   late TabController _tabController;
+  bool _isLoading = true;
 
-  // Dummy data
-  final List<Map<String, dynamic>> _subscriptionPayments = [
-    {
-      'plan': 'Premium Plan',
-      'date': '1 Mar 2026',
-      'amount': 5000,
-      'status': 'Paid',
-      'method': 'JazzCash',
-    },
-    {
-      'plan': 'Premium Plan',
-      'date': '1 Feb 2026',
-      'amount': 5000,
-      'status': 'Paid',
-      'method': 'EasyPaisa',
-    },
-    {
-      'plan': 'Basic Plan',
-      'date': '1 Jan 2026',
-      'amount': 2000,
-      'status': 'Paid',
-      'method': 'Bank Transfer',
-    },
-  ];
-
-  final List<Map<String, dynamic>> _packageSales = [
-    {
-      'package': 'Nathia Gali Adventure',
-      'customer': 'Ahmed Khan',
-      'date': '10 Mar 2026',
-      'amount': 15000,
-      'commission': 1500,
-      'net': 13500,
-      'status': 'Received',
-    },
-    {
-      'package': 'Lahore City Tour',
-      'customer': 'Sara Ali',
-      'date': '8 Mar 2026',
-      'amount': 8000,
-      'commission': 800,
-      'net': 7200,
-      'status': 'Received',
-    },
-    {
-      'package': 'Hunza Valley Trip',
-      'customer': 'Usman Tariq',
-      'date': '5 Mar 2026',
-      'amount': 25000,
-      'commission': 2500,
-      'net': 22500,
-      'status': 'Pending',
-    },
-    {
-      'package': 'Swat Valley Tour',
-      'customer': 'Ayesha Malik',
-      'date': '1 Mar 2026',
-      'amount': 12000,
-      'commission': 1200,
-      'net': 10800,
-      'status': 'Received',
-    },
-  ];
-
-  final List<Map<String, dynamic>> _refunds = [
-    {
-      'package': 'Hunza Valley Trip',
-      'customer': 'Ali Hassan',
-      'date': '12 Mar 2026',
-      'amount': 25000,
-      'reason': 'Trip cancelled by customer',
-      'status': 'Processed',
-    },
-    {
-      'package': 'Nathia Gali Adventure',
-      'customer': 'Fatima Zahra',
-      'date': '7 Mar 2026',
-      'amount': 15000,
-      'reason': 'Weather conditions',
-      'status': 'Pending',
-    },
-  ];
+  List<Map<String, dynamic>> _subscriptionPayments = [];
+  List<Map<String, dynamic>> _packageSales = [];
+  List<Map<String, dynamic>> _refunds = [];
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    setState(() => _isLoading = true);
+    try {
+      final token = await AuthService.getToken();
+      if (token == null) return;
+
+      // Use the payouts endpoint which we expanded to include all types
+      final response = await http.get(
+        Uri.parse('${ApiConfig.BASE_URL}/earnings/payouts?limit=100'),
+        headers: {'x-auth-token': token},
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final List<dynamic> transactions = data['payouts'] ?? [];
+
+        final List<Map<String, dynamic>> subs = [];
+        final List<Map<String, dynamic>> sales = [];
+        final List<Map<String, dynamic>> refs = [];
+
+        for (var t in transactions) {
+          final type = t['type'];
+          final date = t['createdAt'] != null 
+              ? DateTime.parse(t['createdAt']).toString().split(' ')[0]
+              : 'N/A';
+
+          if (type == 'SUBSCRIPTION') {
+            subs.add({
+              'plan': t['notes'] ?? 'Pro Plan',
+              'date': date,
+              'amount': t['amount'] ?? 0,
+              'status': 'Paid',
+              'method': t['paymentMethod'] ?? 'CARD',
+            });
+          } else if (type == 'EARNING') {
+            sales.add({
+              'package': t['packageId']?['title'] ?? 'Travel Package',
+              'customer': t['userId']?['fullName'] ?? 'Customer',
+              'date': date,
+              'amount': (t['amount'] ?? 0) + (t['commissionAmount'] ?? 0),
+              'commission': t['commissionAmount'] ?? 0,
+              'net': t['amount'] ?? 0,
+              'status': t['payoutStatus'] == 'PAID' ? 'Received' : 'Pending',
+            });
+          } else if (type == 'REFUND') {
+            refs.add({
+              'package': t['packageId']?['title'] ?? 'Travel Package',
+              'customer': t['userId']?['fullName'] ?? 'Customer',
+              'date': date,
+              'amount': t['amount'] ?? 0,
+              'reason': t['notes'] ?? 'Cancelled',
+              'status': 'Processed',
+            });
+          }
+        }
+
+        if (mounted) {
+          setState(() {
+            _subscriptionPayments = subs;
+            _packageSales = sales;
+            _refunds = refs;
+            _isLoading = false;
+          });
+        }
+      } else {
+        if (mounted) setState(() => _isLoading = false);
+      }
+    } catch (e) {
+      print('Error loading payment history: $e');
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   @override
@@ -192,9 +188,14 @@ class _PaymentHistoryScreenState extends State<PaymentHistoryScreen>
                 ),
                 // Content
                 Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(32),
-                    child: Column(
+                  child: _isLoading
+                      ? const Center(child: CircularProgressIndicator())
+                      : RefreshIndicator(
+                          onRefresh: _loadData,
+                          child: SingleChildScrollView(
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            padding: const EdgeInsets.all(32),
+                            child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
 
