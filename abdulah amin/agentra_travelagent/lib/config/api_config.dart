@@ -18,6 +18,7 @@ class ApiConfig {
   static const String AGENT_PROFILE = '$BASE_URL/auth/agent/profile';
   static const String UPDATE_AGENT_PROFILE = '$BASE_URL/auth/agent/profile';
   static const String AGENT_DASHBOARD = '$BASE_URL/dashboard/agent';
+  static const String AGENT_ANALYTICS = '$BASE_URL/analytics/agent';
   static const String AGENT_PERFORMANCE = '$BASE_URL/dashboard/agent';
   static const String AGENT_COMPLAINTS = '$BASE_URL/complaints/agent-received';
   static const String AGENT_BOOKINGS = '$BASE_URL/agents/bookings';

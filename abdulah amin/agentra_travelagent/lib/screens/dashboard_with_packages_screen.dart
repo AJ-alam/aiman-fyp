@@ -10,6 +10,7 @@ import 'edit_package_screen.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../config/api_config.dart';
+import '../models/agent.dart';
 
 class DashboardWithPackagesScreen extends StatefulWidget {
   const DashboardWithPackagesScreen({Key? key}) : super(key: key);

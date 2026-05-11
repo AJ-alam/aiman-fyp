@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 import '../widgets/side_navigation.dart';
+import '../services/auth_service.dart';
+import '../config/api_config.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 
 class PaymentHistoryScreen extends StatefulWidget {
   const PaymentHistoryScreen({Key? key}) : super(key: key);
@@ -196,98 +200,98 @@ class _PaymentHistoryScreenState extends State<PaymentHistoryScreen>
                             physics: const AlwaysScrollableScrollPhysics(),
                             padding: const EdgeInsets.all(32),
                             child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-
-                        // ── Summary Cards ──────────────────────────────
-                        GridView.count(
-                          crossAxisCount: 5,
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          crossAxisSpacing: 16,
-                          mainAxisSpacing: 16,
-                          childAspectRatio: 1.4,
-                          children: [
-                            _buildSummaryCard(
-                              'Total Earned',
-                              'PKR ${_totalEarned.toStringAsFixed(0)}',
-                              Icons.trending_up,
-                              Colors.green,
-                            ),
-                            _buildSummaryCard(
-                              'Paid to Subscriptions',
-                              'PKR ${_totalSubscriptions.toStringAsFixed(0)}',
-                              Icons.card_membership_outlined,
-                              Colors.blue,
-                            ),
-                            _buildSummaryCard(
-                              'Refunded Amount',
-                              'PKR ${_totalRefunded.toStringAsFixed(0)}',
-                              Icons.undo_outlined,
-                              Colors.orange,
-                            ),
-                            _buildSummaryCard(
-                              'Commission',
-                              'PKR ${_totalCommission.toStringAsFixed(0)}',
-                              Icons.percent_outlined,
-                              Colors.purple,
-                            ),
-                            _buildSummaryCard(
-                              'Net Amount',
-                              'PKR ${_netAmount.toStringAsFixed(0)}',
-                              Icons.account_balance_wallet_outlined,
-                              _netAmount >= 0 ? Colors.green : Colors.red,
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 32),
-
-                        // ── Tabs ───────────────────────────────────────
-                        Container(
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(20),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.04),
-                                blurRadius: 20,
-                                offset: const Offset(0, 10),
-                              ),
-                            ],
-                          ),
-                          child: Column(
-                            children: [
-                              TabBar(
-                                controller: _tabController,
-                                labelColor: AppColors.primary,
-                                unselectedLabelColor: AppColors.textTertiary,
-                                indicatorColor: AppColors.primary,
-                                indicatorSize: TabBarIndicatorSize.tab,
-                                labelStyle: const TextStyle(
-                                    fontWeight: FontWeight.w700),
-                                tabs: const [
-                                  Tab(text: 'Package Sales'),
-                                  Tab(text: 'Subscriptions'),
-                                  Tab(text: 'Refunds'),
-                                ],
-                              ),
-                              SizedBox(
-                                height: 500,
-                                child: TabBarView(
-                                  controller: _tabController,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // ── Summary Cards ──────────────────────────────
+                                GridView.count(
+                                  crossAxisCount: 5,
+                                  shrinkWrap: true,
+                                  physics: const NeverScrollableScrollPhysics(),
+                                  crossAxisSpacing: 16,
+                                  mainAxisSpacing: 16,
+                                  childAspectRatio: 1.4,
                                   children: [
-                                    _buildPackageSalesTab(),
-                                    _buildSubscriptionsTab(),
-                                    _buildRefundsTab(),
+                                    _buildSummaryCard(
+                                      'Total Earned',
+                                      'PKR ${_totalEarned.toStringAsFixed(0)}',
+                                      Icons.trending_up,
+                                      Colors.green,
+                                    ),
+                                    _buildSummaryCard(
+                                      'Paid to Subscriptions',
+                                      'PKR ${_totalSubscriptions.toStringAsFixed(0)}',
+                                      Icons.card_membership_outlined,
+                                      Colors.blue,
+                                    ),
+                                    _buildSummaryCard(
+                                      'Refunded Amount',
+                                      'PKR ${_totalRefunded.toStringAsFixed(0)}',
+                                      Icons.undo_outlined,
+                                      Colors.orange,
+                                    ),
+                                    _buildSummaryCard(
+                                      'Commission',
+                                      'PKR ${_totalCommission.toStringAsFixed(0)}',
+                                      Icons.percent_outlined,
+                                      Colors.purple,
+                                    ),
+                                    _buildSummaryCard(
+                                      'Net Amount',
+                                      'PKR ${_netAmount.toStringAsFixed(0)}',
+                                      Icons.account_balance_wallet_outlined,
+                                      _netAmount >= 0 ? Colors.green : Colors.red,
+                                    ),
                                   ],
                                 ),
-                              ),
-                            ],
+                                const SizedBox(height: 32),
+
+                                // ── Tabs ───────────────────────────────────────
+                                Container(
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(20),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(0.04),
+                                        blurRadius: 20,
+                                        offset: const Offset(0, 10),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Column(
+                                    children: [
+                                      TabBar(
+                                        controller: _tabController,
+                                        labelColor: AppColors.primary,
+                                        unselectedLabelColor: AppColors.textTertiary,
+                                        indicatorColor: AppColors.primary,
+                                        indicatorSize: TabBarIndicatorSize.tab,
+                                        labelStyle: const TextStyle(
+                                            fontWeight: FontWeight.w700),
+                                        tabs: const [
+                                          Tab(text: 'Package Sales'),
+                                          Tab(text: 'Subscriptions'),
+                                          Tab(text: 'Refunds'),
+                                        ],
+                                      ),
+                                      SizedBox(
+                                        height: 500,
+                                        child: TabBarView(
+                                          controller: _tabController,
+                                          children: [
+                                            _buildPackageSalesTab(),
+                                            _buildSubscriptionsTab(),
+                                            _buildRefundsTab(),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
-                      ],
-                    ),
-                  ),
                 ),
               ],
             ),
