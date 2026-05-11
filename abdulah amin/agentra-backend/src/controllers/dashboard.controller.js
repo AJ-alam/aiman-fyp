@@ -37,6 +37,16 @@ exports.ownerDashboard = async (req, res) => {
     
     const totalComplaints = await Complaint.countDocuments();
 
+    // Total Revenue calculation (sum of booking totalAmount)
+    const bookings = await Booking.find({});
+    const totalRevenue = bookings.reduce((sum, b) => sum + (b.totalAmount || 0), 0);
+
+    // Top Earning Agents
+    const topAgents = await Agent.find({ status: 'APPROVED' })
+      .sort({ totalBookings: -1 })
+      .limit(5)
+      .select('fullName businessName totalBookings totalPackages');
+
     res.json({
       success: true,
       totalUsers,
@@ -47,7 +57,9 @@ exports.ownerDashboard = async (req, res) => {
       rejectedAgents,
       totalBookings,
       pendingRefunds,
-      totalComplaints
+      totalComplaints,
+      totalRevenue,
+      topAgents
     });
   } catch (error) {
     console.error('❌ Error in ownerDashboard:', error);

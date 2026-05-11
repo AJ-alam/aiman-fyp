@@ -9,6 +9,7 @@ const ownerController = require('../controllers/owner.controller');
 router.get('/agents', protect, role('OWNER'), ownerController.getAgents);
 router.put('/agents/:id/verify', protect, role('OWNER'), ownerController.verifyAgent);
 router.put('/agents/:id/block', protect, role('OWNER'), ownerController.blockAgent);
+router.put('/agents/:id/unblock', protect, role('OWNER'), ownerController.unblockAgent);
 router.delete('/agents/:id/reject', protect, role('OWNER'), ownerController.rejectAgent);
 
 // ================= COMPLAINTS =================

@@ -1,37 +1,42 @@
 class ApiConfig {
-  static const String BASE_URL = 'http://localhost:5000';
-  // static const String BASE_URL = 'http://10.0.2.2:5000'; // For Android Emulator
-
-  // Use this for Web or iOS Simulator:
-  // static const String BASE_URL = 'http://localhost:5000';
+  static const String BASE_URL = 'http://localhost:5000/api';
+  // static const String BASE_URL = 'http://10.0.2.2:5000/api'; // For Android Emulator
 
   // ===== AUTH ENDPOINTS =====
-  static const String USER_LOGIN = "$BASE_URL/api/auth/user/login";
-  static const String USER_REGISTER = "$BASE_URL/api/auth/user/register";
+  static const String USER_LOGIN = "$BASE_URL/auth/user/login";
+  static const String USER_REGISTER = "$BASE_URL/auth/user/register";
 
-  static const String AGENT_LOGIN = "$BASE_URL/api/auth/agent/login";
-  static const String AGENT_REGISTER = "$BASE_URL/api/auth/agent/register";
+  static const String AGENT_LOGIN = "$BASE_URL/auth/agent/login";
+  static const String AGENT_REGISTER = "$BASE_URL/auth/agent/register";
 
   // ===== PACKAGE ENDPOINTS =====
-  static const String PACKAGES = '$BASE_URL/api/packages';
-  static const String AGENT_PACKAGES = '$BASE_URL/api/packages/agent';
-  static String packageDetail(String id) => '$BASE_URL/api/packages/$id';
+  static const String PACKAGES = '$BASE_URL/packages';
+  static const String AGENT_PACKAGES = '$BASE_URL/packages/agent';
+  static String packageDetail(String id) => '$BASE_URL/packages/$id';
 
   // ===== AGENT ENDPOINTS =====
-  static const String AGENT_PROFILE = '$BASE_URL/api/auth/agent/profile';
-  static const String UPDATE_AGENT_PROFILE = '$BASE_URL/api/auth/agent/profile';
-  static const String AGENT_DASHBOARD = '$BASE_URL/api/dashboard/agent';
-  static const String AGENT_PERFORMANCE = '$BASE_URL/api/dashboard/agent';
-  static const String AGENT_COMPLAINTS = '$BASE_URL/api/agents/complaints';
-  static const String AGENT_BOOKINGS = '$BASE_URL/api/agents/bookings';
-  static const String AGENT_REFUNDS = '$BASE_URL/api/refund/agent';
+  static const String AGENT_PROFILE = '$BASE_URL/auth/agent/profile';
+  static const String UPDATE_AGENT_PROFILE = '$BASE_URL/auth/agent/profile';
+  static const String AGENT_DASHBOARD = '$BASE_URL/dashboard/agent';
+  static const String AGENT_PERFORMANCE = '$BASE_URL/dashboard/agent';
+  static const String AGENT_COMPLAINTS = '$BASE_URL/agents/complaints';
+  static const String AGENT_BOOKINGS = '$BASE_URL/agents/bookings';
+  static const String AGENT_REFUNDS = '$BASE_URL/refund/agent';
 
-  // ===== ADMIN ENDPOINTS =====
-  static const String OWNER_LOGIN = '$BASE_URL/api/auth/owner/login';
-  static const String UNVERIFIED_AGENTS = '$BASE_URL/api/auth/owner/agents';
-  static String verifyAgent(String id) => '$BASE_URL/api/auth/owner/agents/$id/verify';
-  static String rejectAgent(String id) => '$BASE_URL/api/owner/agents/$id/reject';
-  static const String ALL_AGENTS = '$BASE_URL/api/agents';
-  static const String OWNER_DASHBOARD = '$BASE_URL/api/dashboard/owner';
-  static const String UPLOAD_IMAGE = '$BASE_URL/api/upload/image';
+  // ===== ADMIN / OWNER ENDPOINTS =====
+  static const String OWNER_LOGIN = '$BASE_URL/auth/owner/login';
+  static const String OWNER_DASHBOARD = '$BASE_URL/dashboard/owner';
+  
+  // New Approval Workflow Routes
+  static const String PENDING_AGENTS = '$BASE_URL/auth/admin/agents/pending';
+  static String approveAgent(String id) => '$BASE_URL/auth/admin/agents/$id/approve';
+  static String rejectAgent(String id) => '$BASE_URL/auth/admin/agents/$id/reject';
+  
+  // Legacy / Other Admin Routes
+  static const String COMPLAINTS = '$BASE_URL/complaints';
+  static String updateComplaint(String id) => '$BASE_URL/complaints/$id';
+  
+  static const String UPLOAD_IMAGE = '$BASE_URL/upload/image';
 }
+
+

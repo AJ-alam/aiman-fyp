@@ -16,184 +16,65 @@ class _OwnerManageAccountsScreenState
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
 
-  // Dummy travel agents
-  final List<Map<String, dynamic>> _agents = [
-    {
-      'id': '1',
-      'name': 'Aimen Nadeem',
-      'businessName': 'Mind Travellers',
-      'email': 'aimen@gmail.com',
-      'phone': '03135766156',
-      'status': 'active', // active, blocked, notice_sent, deleted
-      'joinDate': '10 Jan 2025',
-      'totalPackages': 5,
-      'totalBookings': 23,
-    },
-    {
-      'id': '2',
-      'name': 'Stranger Things',
-      'businessName': 'Stranger Tours',
-      'email': 'stranger@gmail.com',
-      'phone': '03135766158',
-      'status': 'active',
-      'joinDate': '15 Feb 2025',
-      'totalPackages': 3,
-      'totalBookings': 10,
-    },
-    {
-      'id': '3',
-      'name': 'Muhammad Nadeem',
-      'businessName': 'Nadeem Travels',
-      'email': 'nadeem@gmail.com',
-      'phone': '03001234567',
-      'status': 'blocked',
-      'joinDate': '20 Mar 2025',
-      'totalPackages': 8,
-      'totalBookings': 45,
-    },
-    {
-      'id': '4',
-      'name': 'Sara Ali',
-      'businessName': 'Ali Adventures',
-      'email': 'sara@gmail.com',
-      'phone': '03211234567',
-      'status': 'notice_sent',
-      'joinDate': '5 Apr 2025',
-      'totalPackages': 2,
-      'totalBookings': 7,
-      'noticeDate': '1 Mar 2026',
-      'noticeDaysLeft': 13,
-    },
-  ];
+  List<dynamic> _agents = [];
+  bool _isLoading = true;
 
-  List<Map<String, dynamic>> get _filteredAgents {
+  @override
+  void initState() {
+    super.initState();
+    _loadAgents();
+  }
+
+  Future<void> _loadAgents() async {
+    setState(() => _isLoading = true);
+    final agents = await AdminService.getAllAgents();
+    if (mounted) {
+      setState(() {
+        _agents = agents;
+        _isLoading = false;
+      });
+    }
+  }
+
+  List<dynamic> get _filteredAgents {
     if (_searchQuery.isEmpty) return _agents;
     return _agents.where((a) {
-      return a['name'].toString().toLowerCase().contains(_searchQuery) ||
-          a['businessName'].toString().toLowerCase().contains(_searchQuery) ||
-          a['email'].toString().toLowerCase().contains(_searchQuery);
+      final name = (a['fullName'] ?? '').toString().toLowerCase();
+      final businessName = (a['businessName'] ?? '').toString().toLowerCase();
+      final email = (a['email'] ?? '').toString().toLowerCase();
+      return name.contains(_searchQuery) ||
+          businessName.contains(_searchQuery) ||
+          email.contains(_searchQuery);
     }).toList();
   }
+
 
   void _showDeleteDialog(Map<String, dynamic> agent) {
     showDialog(
       context: context,
-      builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24)),
-        child: Container(
-          padding: const EdgeInsets.all(32),
-          width: 440,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.red.withOpacity(0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(Icons.delete_outline,
-                    color: Colors.red, size: 36),
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                'Delete Account',
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w900,
-                  color: Color(0xFF1B1E28),
-                ),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                'You are about to delete ${agent['businessName']}\'s account.',
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                    color: Color(0xFF4A4A4A), fontSize: 15),
-              ),
-              const SizedBox(height: 12),
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.orange.withOpacity(0.05),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                      color: Colors.orange.withOpacity(0.3)),
-                ),
-                child: const Row(
-                  children: [
-                    Icon(Icons.info_outline,
-                        color: Colors.orange, size: 18),
-                    SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        'A 1-month notice will be sent to the travel agent before their account is permanently deleted.',
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: Colors.orange,
-                          height: 1.5,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 24),
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () => Navigator.pop(context),
-                      style: OutlinedButton.styleFrom(
-                        padding:
-                            const EdgeInsets.symmetric(vertical: 14),
-                        side: const BorderSide(
-                            color: AppColors.border),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      child: const Text('Cancel',
-                          style: TextStyle(
-                              color: AppColors.textPrimary)),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                        setState(() {
-                          final index = _agents.indexWhere(
-                              (a) => a['id'] == agent['id']);
-                          if (index != -1) {
-                            _agents[index]['status'] = 'notice_sent';
-                            _agents[index]['noticeDate'] =
-                                '${DateTime.now().day} ${_monthName(DateTime.now().month)} ${DateTime.now().year}';
-                            _agents[index]['noticeDaysLeft'] = 30;
-                            _agents[index]['noticeType'] = 'delete';
-                          }
-                        });
-                        _showNoticeSentDialog(agent['name'], 'deletion');
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red,
-                        padding:
-                            const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      child: const Text('Send Notice & Delete',
-                          style: TextStyle(color: Colors.white)),
-                    ),
-                  ),
-                ],
-              ),
-            ],
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text('Delete Account',
+            style: TextStyle(fontWeight: FontWeight.w800)),
+        content: Text(
+            'Are you sure you want to delete ${agent['fullName']}\'s account? This action cannot be undone.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
           ),
-        ),
+          ElevatedButton(
+            onPressed: () async {
+              final success = await AdminService.rejectAgent(agent['_id']);
+              if (success && mounted) {
+                Navigator.pop(context);
+                _loadAgents();
+              }
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('Delete', style: TextStyle(color: Colors.white)),
+          ),
+        ],
       ),
     );
   }
@@ -201,122 +82,29 @@ class _OwnerManageAccountsScreenState
   void _showBlockDialog(Map<String, dynamic> agent) {
     showDialog(
       context: context,
-      builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24)),
-        child: Container(
-          padding: const EdgeInsets.all(32),
-          width: 440,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.blue.withOpacity(0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(Icons.block_outlined,
-                    color: Colors.blue, size: 36),
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                'Block Account',
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w900,
-                  color: Color(0xFF1B1E28),
-                ),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                'You are about to block ${agent['businessName']}\'s account.',
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                    color: Color(0xFF4A4A4A), fontSize: 15),
-              ),
-              const SizedBox(height: 12),
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.orange.withOpacity(0.05),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                      color: Colors.orange.withOpacity(0.3)),
-                ),
-                child: const Row(
-                  children: [
-                    Icon(Icons.info_outline,
-                        color: Colors.orange, size: 18),
-                    SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        'A 1-month notice will be sent to the travel agent before their account is blocked.',
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: Colors.orange,
-                          height: 1.5,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 24),
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () => Navigator.pop(context),
-                      style: OutlinedButton.styleFrom(
-                        padding:
-                            const EdgeInsets.symmetric(vertical: 14),
-                        side: const BorderSide(
-                            color: AppColors.border),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      child: const Text('Cancel',
-                          style: TextStyle(
-                              color: AppColors.textPrimary)),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                        setState(() {
-                          final index = _agents.indexWhere(
-                              (a) => a['id'] == agent['id']);
-                          if (index != -1) {
-                            _agents[index]['status'] = 'notice_sent';
-                            _agents[index]['noticeDate'] =
-                                '${DateTime.now().day} ${_monthName(DateTime.now().month)} ${DateTime.now().year}';
-                            _agents[index]['noticeDaysLeft'] = 30;
-                            _agents[index]['noticeType'] = 'block';
-                          }
-                        });
-                        _showNoticeSentDialog(agent['name'], 'blocking');
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blue,
-                        padding:
-                            const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      child: const Text('Send Notice & Block',
-                          style: TextStyle(color: Colors.white)),
-                    ),
-                  ),
-                ],
-              ),
-            ],
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text('Block Account',
+            style: TextStyle(fontWeight: FontWeight.w800)),
+        content: Text(
+            'Are you sure you want to block ${agent['fullName']}\'s account?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
           ),
-        ),
+          ElevatedButton(
+            onPressed: () async {
+              final success = await AdminService.blockAgent(agent['_id']);
+              if (success && mounted) {
+                Navigator.pop(context);
+                _loadAgents();
+              }
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
+            child: const Text('Block', style: TextStyle(color: Colors.white)),
+          ),
+        ],
       ),
     );
   }
@@ -388,19 +176,17 @@ class _OwnerManageAccountsScreenState
     );
   }
 
-  void _unblockAgent(String id) {
-    setState(() {
-      final index = _agents.indexWhere((a) => a['id'] == id);
-      if (index != -1) {
-        _agents[index]['status'] = 'active';
-      }
-    });
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Account unblocked successfully'),
-        backgroundColor: Colors.green,
-      ),
-    );
+  void _unblockAgent(String id) async {
+    final success = await AdminService.unblockAgent(id);
+    if (success && mounted) {
+      _loadAgents();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Account unblocked successfully'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    }
   }
 
   String _monthName(int month) {
@@ -413,20 +199,20 @@ class _OwnerManageAccountsScreenState
 
   Color _statusColor(String status) {
     switch (status) {
-      case 'active': return Colors.green;
-      case 'blocked': return Colors.red;
-      case 'notice_sent': return Colors.orange;
-      case 'deleted': return Colors.grey;
+      case 'APPROVED': return Colors.green;
+      case 'BLOCKED': return Colors.red;
+      case 'PENDING_APPROVAL': return Colors.orange;
+      case 'REJECTED': return Colors.grey;
       default: return Colors.grey;
     }
   }
 
   String _statusLabel(String status) {
     switch (status) {
-      case 'active': return 'Active';
-      case 'blocked': return 'Blocked';
-      case 'notice_sent': return 'Notice Sent';
-      case 'deleted': return 'Deleted';
+      case 'APPROVED': return 'Active';
+      case 'BLOCKED': return 'Blocked';
+      case 'PENDING_APPROVAL': return 'Pending';
+      case 'REJECTED': return 'Rejected';
       default: return 'Unknown';
     }
   }
@@ -479,22 +265,22 @@ class _OwnerManageAccountsScreenState
                           ),
                         ],
                       ),
-                      // Status chips
-                      Row(
-                        children: [
-                          _buildChip(
-                              '${_agents.where((a) => a['status'] == 'active').length} Active',
-                              Colors.green),
-                          const SizedBox(width: 8),
-                          _buildChip(
-                              '${_agents.where((a) => a['status'] == 'blocked').length} Blocked',
-                              Colors.red),
-                          const SizedBox(width: 8),
-                          _buildChip(
-                              '${_agents.where((a) => a['status'] == 'notice_sent').length} Notice Sent',
-                              Colors.orange),
-                        ],
-                      ),
+                // Status chips
+                Row(
+                  children: [
+                    _buildChip(
+                        '${_agents.where((a) => a['status'] == 'APPROVED').length} Active',
+                        Colors.green),
+                    const SizedBox(width: 8),
+                    _buildChip(
+                        '${_agents.where((a) => a['status'] == 'BLOCKED').length} Blocked',
+                        Colors.red),
+                    const SizedBox(width: 8),
+                    _buildChip(
+                        '${_agents.where((a) => a['status'] == 'PENDING_APPROVAL').length} Pending',
+                        Colors.orange),
+                  ],
+                ),
                     ],
                   ),
                 ),
@@ -588,7 +374,7 @@ class _OwnerManageAccountsScreenState
                     ? Colors.grey.withOpacity(0.1)
                     : AppColors.primary.withOpacity(0.1),
                 child: Text(
-                  agent['name'][0].toUpperCase(),
+                  (agent['fullName'] ?? agent['businessName'] ?? 'A')[0].toUpperCase(),
                   style: TextStyle(
                     color: isDeleted ? Colors.grey : AppColors.primary,
                     fontWeight: FontWeight.w800,
@@ -603,7 +389,7 @@ class _OwnerManageAccountsScreenState
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      agent['name'],
+                      agent['fullName'] ?? 'Unknown',
                       style: TextStyle(
                         fontWeight: FontWeight.w800,
                         fontSize: 16,
@@ -616,12 +402,12 @@ class _OwnerManageAccountsScreenState
                       ),
                     ),
                     Text(
-                      agent['businessName'],
+                      agent['businessName'] ?? '',
                       style: const TextStyle(
                           fontSize: 13, color: Color(0xFF7D848D)),
                     ),
                     Text(
-                      'Travel Agent  •  Joined ${agent['joinDate']}',
+                      'Travel Agent  •  Joined ${agent['createdAt']?.toString().split('T')[0] ?? 'N/A'}',
                       style: const TextStyle(
                           fontSize: 12, color: Color(0xFF7D848D)),
                     ),
@@ -649,9 +435,9 @@ class _OwnerManageAccountsScreenState
               const SizedBox(width: 12),
               // Action buttons
               if (!isDeleted) ...[
-                if (status == 'blocked')
+                if (status == 'BLOCKED')
                   ElevatedButton(
-                    onPressed: () => _unblockAgent(agent['id']),
+                    onPressed: () => _unblockAgent(agent['_id']),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.green,
                       padding: const EdgeInsets.symmetric(

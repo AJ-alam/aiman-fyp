@@ -17,8 +17,20 @@ exports.verifyAgent = async (req, res) => {
 
 // ---------- BLOCK AGENT ----------
 exports.blockAgent = async (req, res) => {
-  await Agent.findByIdAndUpdate(req.params.id, { isVerified: false });
+  await Agent.findByIdAndUpdate(req.params.id, { 
+    status: 'BLOCKED',
+    isVerified: false 
+  });
   res.json({ success: true, message: 'Agent blocked successfully' });
+};
+
+// ---------- UNBLOCK AGENT ----------
+exports.unblockAgent = async (req, res) => {
+  await Agent.findByIdAndUpdate(req.params.id, { 
+    status: 'APPROVED',
+    isVerified: true 
+  });
+  res.json({ success: true, message: 'Agent unblocked successfully' });
 };
 
 // ---------- REJECT AGENT ----------

@@ -15,66 +15,38 @@ class _OwnerComplaintsScreenState extends State<OwnerComplaintsScreen> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
 
-  final List<Map<String, dynamic>> _complaints = [
-    {
-      'id': '1',
-      'from': 'Aimen Nadeem',
-      'role': 'Travel Agent',
-      'email': 'aimen@gmail.com',
-      'subject': 'Refund was not done',
-      'description':
-          'I requested a refund 2 weeks ago for a cancelled booking but have not received it yet. The booking ID is #BK1234.',
-      'date': '10 Mar 2026',
-      'status': 'pending',
-      'response': '',
-    },
-    {
-      'id': '2',
-      'from': 'Ahmed Khan',
-      'role': 'Travel Agent',
-      'email': 'ahmed@gmail.com',
-      'subject': 'Package not showing in search',
-      'description':
-          'My packages are not appearing in search results even though they are active. This has been going on for 3 days.',
-      'date': '8 Mar 2026',
-      'status': 'pending',
-      'response': '',
-    },
-    {
-      'id': '3',
-      'from': 'Sara Ali',
-      'role': 'Travel Agent',
-      'email': 'sara@gmail.com',
-      'subject': 'Payment not received',
-      'description':
-          'I completed a booking last month but the payment has not been transferred to my account.',
-      'date': '5 Mar 2026',
-      'status': 'resolved',
-      'response':
-          'We have investigated and the payment has been processed. Please check your account within 2-3 business days.',
-    },
-    {
-      'id': '4',
-      'from': 'Usman Tariq',
-      'role': 'Travel Agent',
-      'email': 'usman@gmail.com',
-      'subject': 'Unable to upload images',
-      'description':
-          'I am unable to upload images for my packages. The upload button does not work.',
-      'date': '1 Mar 2026',
-      'status': 'resolved',
-      'response':
-          'This issue has been fixed in the latest update. Please refresh your portal.',
-    },
-  ];
+  List<dynamic> _complaints = [];
+  bool _isLoading = true;
 
-  List<Map<String, dynamic>> get _filtered {
+  @override
+  void initState() {
+    super.initState();
+    _loadComplaints();
+  }
+
+  Future<void> _loadComplaints() async {
+    setState(() => _isLoading = true);
+    final data = await AdminService.getComplaints();
+    if (mounted) {
+      setState(() {
+        _complaints = data;
+        _isLoading = false;
+      });
+    }
+  }
+
+  List<dynamic> get _filtered {
     if (_searchQuery.isEmpty) return _complaints;
     return _complaints.where((c) {
-      return c['from'].toString().toLowerCase().contains(_searchQuery) ||
-          c['subject'].toString().toLowerCase().contains(_searchQuery);
+      final user = c['userId'];
+      final agent = c['agentId'];
+      final from = (user?['fullName'] ?? agent?['fullName'] ?? 'Unknown').toString().toLowerCase();
+      final subject = (c['subject'] ?? '').toString().toLowerCase();
+      return from.contains(_searchQuery) || subject.contains(_searchQuery);
     }).toList();
   }
+
+
 
   void _showDetailDialog(Map<String, dynamic> complaint) {
     final TextEditingController responseController =
@@ -193,24 +165,22 @@ class _OwnerComplaintsScreenState extends State<OwnerComplaintsScreen> {
                   Expanded(
                     flex: 2,
                     child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                        setState(() {
-                          final index = _complaints.indexWhere(
-                              (c) => c['id'] == complaint['id']);
-                          if (index != -1) {
-                            _complaints[index]['status'] = 'resolved';
-                            _complaints[index]['response'] =
-                                responseController.text;
-                          }
-                        });
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text(
-                                'Response sent and complaint resolved!'),
-                            backgroundColor: Colors.green,
-                          ),
+                      onPressed: () async {
+                        final success = await AdminService.resolveComplaint(
+                          complaint['_id'],
+                          responseController.text,
                         );
+                        if (success && mounted) {
+                          Navigator.pop(context);
+                          _loadComplaints();
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                  'Response sent and complaint resolved!'),
+                              backgroundColor: Colors.green,
+                            ),
+                          );
+                        }
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.primary,
@@ -260,9 +230,9 @@ class _OwnerComplaintsScreenState extends State<OwnerComplaintsScreen> {
   @override
   Widget build(BuildContext context) {
     final pending =
-        _complaints.where((c) => c['status'] == 'pending').length;
+        _complaints.where((c) => c['status'] == 'OPEN').length;
     final resolved =
-        _complaints.where((c) => c['status'] == 'resolved').length;
+        _complaints.where((c) => c['status'] == 'RESOLVED').length;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
@@ -356,13 +326,15 @@ class _OwnerComplaintsScreenState extends State<OwnerComplaintsScreen> {
                 ),
                 // List
                 Expanded(
-                  child: ListView.builder(
-                    padding: const EdgeInsets.all(32),
-                    itemCount: _filtered.length,
-                    itemBuilder: (context, index) {
-                      final complaint = _filtered[index];
-                      final bool isPending =
-                          complaint['status'] == 'pending';
+                  child: _isLoading
+                      ? const Center(child: CircularProgressIndicator())
+                      : ListView.builder(
+                          padding: const EdgeInsets.all(32),
+                          itemCount: _filtered.length,
+                          itemBuilder: (context, index) {
+                            final complaint = _filtered[index];
+                            final bool isPending =
+                                complaint['status'] == 'OPEN';
                       return Container(
                         margin: const EdgeInsets.only(bottom: 16),
                         padding: const EdgeInsets.all(20),
@@ -423,7 +395,7 @@ class _OwnerComplaintsScreenState extends State<OwnerComplaintsScreen> {
                                   ),
                                   const SizedBox(height: 4),
                                   Text(
-                                    'From: ${complaint['from']} (${complaint['role']})',
+                                    'From: ${complaint['userId']?['fullName'] ?? complaint['agentId']?['fullName'] ?? 'Unknown'}',
                                     style: const TextStyle(
                                       fontSize: 14,
                                       color: Color(0xFF4A4A4A),

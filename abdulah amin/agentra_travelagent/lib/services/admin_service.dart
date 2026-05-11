@@ -88,7 +88,7 @@ static Future<Map<String, dynamic>> getOwnerDashboard() async {
       if (token == null) return [];
 
       final response = await http.get(
-        Uri.parse(ApiConfig.UNVERIFIED_AGENTS),
+        Uri.parse(ApiConfig.PENDING_AGENTS),
         headers: {
           'Content-Type': 'application/json',
           'x-auth-token': token,
@@ -113,7 +113,7 @@ static Future<Map<String, dynamic>> getOwnerDashboard() async {
       if (token == null) return false;
 
       final response = await http.put(
-        Uri.parse(ApiConfig.verifyAgent(id)),
+        Uri.parse(ApiConfig.approveAgent(id)),
         headers: {
           'Content-Type': 'application/json',
           'x-auth-token': token,
@@ -131,84 +131,27 @@ static Future<Map<String, dynamic>> getOwnerDashboard() async {
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('token');
       
-      print('🔍 Reject Agent Debug:');
-      print('  Agent ID: $id');
-      print('  Token exists: ${token != null}');
-      print('  Token: ${token?.substring(0, 20)}...');
-      
-      if (token == null) {
-        print('❌ No token found');
-        return false;
-      }
-
-      final url = ApiConfig.rejectAgent(id);
-      print('  URL: $url');
-
-      final response = await http.delete(
-        Uri.parse(url),
-        headers: {
-          'Content-Type': 'application/json',
-          'x-auth-token': token,
-        },
-      );
-      
-      print('  Response Status: ${response.statusCode}');
-      print('  Response Body: ${response.body}');
-      
-      return response.statusCode == 200;
-    } catch (e) {
-      print('❌ Reject agent error: $e');
-      return false;
-    }
-  }
-
-  // ===== NEW APPROVAL WORKFLOW =====
-  static Future<List<dynamic>> getPendingAgents() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('token');
-      if (token == null) return [];
-
-      final response = await http.get(
-        Uri.parse('${ApiConfig.BASE_URL}/auth/admin/agents/pending'),
-        headers: {
-          'Content-Type': 'application/json',
-          'x-auth-token': token,
-        },
-      );
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        return data['agents'] ?? [];
-      }
-      return [];
-    } catch (e) {
-      print('Get pending agents error: $e');
-      return [];
-    }
-  }
-
-  static Future<bool> approveAgent(String agentId) async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('token');
       if (token == null) return false;
 
       final response = await http.put(
-        Uri.parse('${ApiConfig.BASE_URL}/auth/admin/agents/$agentId/approve'),
+        Uri.parse(ApiConfig.rejectAgent(id)),
         headers: {
           'Content-Type': 'application/json',
           'x-auth-token': token,
         },
+        body: jsonEncode({'reason': 'Rejected by Admin'}),
       );
-
+      
       return response.statusCode == 200;
     } catch (e) {
-      print('Approve agent error: $e');
+      print('Reject agent error: $e');
       return false;
     }
   }
 
+  // ===== NEW APPROVAL WORKFLOW (ALIAS TO ABOVE) =====
+  static Future<List<dynamic>> getPendingAgents() => getUnverifiedAgents();
+  static Future<bool> approveAgent(String agentId) => verifyAgent(agentId);
   static Future<bool> rejectAgentApproval(String agentId, {String? reason}) async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -216,12 +159,12 @@ static Future<Map<String, dynamic>> getOwnerDashboard() async {
       if (token == null) return false;
 
       final response = await http.put(
-        Uri.parse('${ApiConfig.BASE_URL}/auth/admin/agents/$agentId/reject'),
+        Uri.parse(ApiConfig.rejectAgent(agentId)),
         headers: {
           'Content-Type': 'application/json',
           'x-auth-token': token,
         },
-        body: jsonEncode({'reason': reason ?? ''}),
+        body: jsonEncode({'reason': reason ?? 'Rejected by Admin'}),
       );
 
       return response.statusCode == 200;
@@ -230,5 +173,97 @@ static Future<Map<String, dynamic>> getOwnerDashboard() async {
       return false;
     }
   }
+
+  static Future<bool> blockAgent(String id) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('token');
+      if (token == null) return false;
+
+      final response = await http.put(
+        Uri.parse('${ApiConfig.BASE_URL}/owner/agents/$id/block'),
+        headers: {
+          'Content-Type': 'application/json',
+          'x-auth-token': token,
+        },
+      );
+      return response.statusCode == 200;
+    } catch (e) {
+      print('Block agent error: $e');
+      return false;
+    }
+  }
+
+  static Future<bool> unblockAgent(String id) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('token');
+      if (token == null) return false;
+
+      final response = await http.put(
+        Uri.parse('${ApiConfig.BASE_URL}/owner/agents/$id/unblock'),
+        headers: {
+          'Content-Type': 'application/json',
+          'x-auth-token': token,
+        },
+      );
+      return response.statusCode == 200;
+    } catch (e) {
+      print('Unblock agent error: $e');
+      return false;
+    }
+  }
+
+  static Future<List<dynamic>> getComplaints() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('token');
+      if (token == null) return [];
+
+      final response = await http.get(
+        Uri.parse(ApiConfig.COMPLAINTS),
+        headers: {
+          'Content-Type': 'application/json',
+          'x-auth-token': token,
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return data['complaints'] ?? [];
+      }
+      return [];
+    } catch (e) {
+      print('Get complaints error: $e');
+      return [];
+    }
+  }
+
+  static Future<bool> resolveComplaint(String id, String responseText) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('token');
+      if (token == null) return false;
+
+      final response = await http.put(
+        Uri.parse(ApiConfig.updateComplaint(id)),
+        headers: {
+          'Content-Type': 'application/json',
+          'x-auth-token': token,
+        },
+        body: jsonEncode({
+          'status': 'RESOLVED',
+          'adminResponse': responseText,
+        }),
+      );
+
+      return response.statusCode == 200;
+    } catch (e) {
+      print('Resolve complaint error: $e');
+      return false;
+    }
+  }
 }
+
+
 

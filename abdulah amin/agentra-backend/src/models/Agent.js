@@ -75,7 +75,7 @@ const agentSchema = new mongoose.Schema({
   // Approval Status
   status: {
     type: String,
-    enum: ['PENDING_APPROVAL', 'APPROVED', 'REJECTED'],
+    enum: ['PENDING_APPROVAL', 'APPROVED', 'REJECTED', 'BLOCKED'],
     default: 'PENDING_APPROVAL'
   },
 

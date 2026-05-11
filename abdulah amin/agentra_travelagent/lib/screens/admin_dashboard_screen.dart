@@ -15,12 +15,26 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   Map<String, dynamic> _dashboardData = {};
   bool _isLoading = true;
 
-  // Dummy monthly stats
- final List<Map<String, dynamic>> _monthlyStats = [
-  {'label': 'Total Bookings', 'value': 16, 'color': Colors.red as Color},
-  {'label': 'Pending Refunds', 'value': 45, 'color': Colors.orange as Color},
-  {'label': 'New Agents', 'value': 27, 'color': Colors.amber as Color},
-];
+  // Monthly stats (will be updated from real data)
+  List<Map<String, dynamic>> _getMonthlyStats() {
+    return [
+      {
+        'label': 'Total Bookings',
+        'value': _dashboardData['totalBookings'] ?? 0,
+        'color': Colors.red
+      },
+      {
+        'label': 'Pending Refunds',
+        'value': _dashboardData['pendingRefunds'] ?? 0,
+        'color': Colors.orange
+      },
+      {
+        'label': 'New Agents',
+        'value': _dashboardData['newAgents'] ?? 0,
+        'color': Colors.amber
+      },
+    ];
+  }
 
   @override
   void initState() {
@@ -111,8 +125,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        Text('25,00000',
-                            style: TextStyle(
+                        Text('RS ${agent['revenue'] ?? '0'}',
+                            style: const TextStyle(
                                 fontWeight: FontWeight.w900,
                                 fontSize: 20,
                                 color: Color(0xFF1B1E28))),
@@ -149,7 +163,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                         '${agent['totalPackages'] ?? 0}'),
                     _buildPerfRow('Overall Rating',
                         '${agent['averageRating'] ?? 0} (good)'),
-                    _buildPerfRow('Total Complaints', '1'),
+                    _buildPerfRow('Total Complaints', '${agent['totalComplaints'] ?? 0}'),
                     _buildPerfRow('Total Packages Sold',
                         '${agent['totalBookings'] ?? 0}'),
                   ],
@@ -295,11 +309,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                                   ],
                                 ),
                                 child: Column(
-                                  children: _monthlyStats.map((stat) {
-                                    const double maxVal = 50;
-                                    final double barWidth =
-                                        (stat['value'] / maxVal)
-                                            .clamp(0.0, 1.0);
+                                    children: _getMonthlyStats().map((stat) {
+                                      const double maxVal = 100; // Adjusted max value
+                                      final double barWidth =
+                                          (stat['value'] / maxVal)
+                                              .clamp(0.0, 1.0);
                                     return Padding(
                                       padding: const EdgeInsets.only(
                                           bottom: 16),

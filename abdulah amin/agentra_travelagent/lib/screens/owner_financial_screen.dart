@@ -12,34 +12,56 @@ class OwnerFinancialScreen extends StatefulWidget {
 
 class _OwnerFinancialScreenState extends State<OwnerFinancialScreen> {
   int _selectedNavIndex = 4;
+  Map<String, dynamic> _dashboardData = {};
+  bool _isLoading = true;
 
-  // Dummy financial data
-  final List<Map<String, dynamic>> _summaryCards = [
-    {
-      'label': 'Total Revenue',
-      'value': 'PKR 35,000,000',
-      'icon': Icons.account_balance_wallet_outlined,
-      'color': Colors.green,
-    },
-    {
-      'label': 'Total Users',
-      'value': '1M+',
-      'icon': Icons.people_outlined,
-      'color': Colors.blue,
-    },
-    {
-      'label': 'Pending Payouts',
-      'value': '200',
-      'icon': Icons.pending_outlined,
-      'color': Colors.orange,
-    },
-    {
-      'label': 'Total Packages',
-      'value': '180',
-      'icon': Icons.card_travel_outlined,
-      'color': Colors.purple,
-    },
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    setState(() => _isLoading = true);
+    final data = await AdminService.getOwnerDashboard();
+    if (mounted) {
+      setState(() {
+        _dashboardData = data;
+        _isLoading = false;
+      });
+    }
+  }
+
+  // Real summary cards based on backend data
+  List<Map<String, dynamic>> get _summaryCards {
+    return [
+      {
+        'label': 'Total Revenue',
+        'value': 'PKR ${_dashboardData['totalRevenue'] ?? '0'}',
+        'icon': Icons.account_balance_wallet_outlined,
+        'color': Colors.green,
+      },
+      {
+        'label': 'Total Users',
+        'value': '${_dashboardData['totalUsers'] ?? 0}',
+        'icon': Icons.people_outlined,
+        'color': Colors.blue,
+      },
+      {
+        'label': 'Pending Payouts',
+        'value': '${_dashboardData['pendingPayouts'] ?? 0}',
+        'icon': Icons.pending_outlined,
+        'color': Colors.orange,
+      },
+      {
+        'label': 'Total Bookings',
+        'value': '${_dashboardData['totalBookings'] ?? 0}',
+        'icon': Icons.card_travel_outlined,
+        'color': Colors.purple,
+      },
+    ];
+  }
+
 
   final List<Map<String, dynamic>> _monthlyData = [
     {'month': 'Oct', 'revenue': 2200000, 'bookings': 45},
@@ -50,32 +72,10 @@ class _OwnerFinancialScreenState extends State<OwnerFinancialScreen> {
     {'month': 'Mar', 'revenue': 3800000, 'bookings': 82},
   ];
 
-  final List<Map<String, dynamic>> _topAgents = [
-    {
-      'name': 'Mind Travellers',
-      'agent': 'Aimen Nadeem',
-      'revenue': 5200000,
-      'bookings': 43,
-    },
-    {
-      'name': 'Nadeem Travels',
-      'agent': 'Muhammad Nadeem',
-      'revenue': 4800000,
-      'bookings': 38,
-    },
-    {
-      'name': 'Ali Adventures',
-      'agent': 'Sara Ali',
-      'revenue': 3900000,
-      'bookings': 31,
-    },
-    {
-      'name': 'Stranger Tours',
-      'agent': 'Stranger Things',
-      'revenue': 2900000,
-      'bookings': 25,
-    },
-  ];
+  List<dynamic> get _topAgents {
+    return _dashboardData['topAgents'] ?? [];
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -151,8 +151,10 @@ class _OwnerFinancialScreenState extends State<OwnerFinancialScreen> {
                 ),
                 // Content
                 Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(32),
+                  child: _isLoading
+                      ? const Center(child: CircularProgressIndicator())
+                      : SingleChildScrollView(
+                          padding: const EdgeInsets.all(32),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -330,7 +332,7 @@ class _OwnerFinancialScreenState extends State<OwnerFinancialScreen> {
                                         CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        agent['name'],
+                                        agent['businessName'] ?? 'Unknown',
                                         style: const TextStyle(
                                           fontWeight: FontWeight.w700,
                                           fontSize: 15,
@@ -338,7 +340,7 @@ class _OwnerFinancialScreenState extends State<OwnerFinancialScreen> {
                                         ),
                                       ),
                                       Text(
-                                        agent['agent'],
+                                        agent['fullName'] ?? '',
                                         style: const TextStyle(
                                           fontSize: 13,
                                           color: Color(0xFF7D848D),
@@ -352,7 +354,7 @@ class _OwnerFinancialScreenState extends State<OwnerFinancialScreen> {
                                       CrossAxisAlignment.end,
                                   children: [
                                     Text(
-                                      'PKR ${(agent['revenue'] / 1000000).toStringAsFixed(1)}M',
+                                      '${agent['totalBookings'] ?? 0} Bookings',
                                       style: const TextStyle(
                                         fontWeight: FontWeight.w900,
                                         fontSize: 16,
@@ -360,7 +362,7 @@ class _OwnerFinancialScreenState extends State<OwnerFinancialScreen> {
                                       ),
                                     ),
                                     Text(
-                                      '${agent['bookings']} bookings',
+                                      '${agent['totalPackages'] ?? 0} Packages',
                                       style: const TextStyle(
                                         fontSize: 12,
                                         color: Color(0xFF7D848D),
