@@ -1,8 +1,12 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import '../theme/app_theme.dart';
 import '../widgets/side_navigation.dart';
 import '../widgets/custom_input.dart';
 import '../services/payment_service.dart';
+import '../services/auth_service.dart';
+import '../config/api_config.dart';
 
 class PremiumPaymentScreen extends StatefulWidget {
   const PremiumPaymentScreen({Key? key}) : super(key: key);
@@ -64,7 +68,6 @@ class _PremiumPaymentScreenState extends State<PremiumPaymentScreen> {
     );
 
     if (!validation.isValid) {
-      // Display validation errors in SnackBar
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(validation.errors.values.first),
@@ -77,24 +80,43 @@ class _PremiumPaymentScreenState extends State<PremiumPaymentScreen> {
     setState(() => _isLoading = true);
 
     try {
-      // Process payment using PaymentService
+      // Step 1: Simulate JazzCash payment
       final result = await PaymentService.processPayment(
         mobileNumber: _jazzcashNumberController.text,
         cnicLastSix: _cnicController.text,
         amount: _plans[_selectedPlan]['price'].toDouble(),
       );
 
-      setState(() => _isLoading = false);
-
-      // Handle PaymentResult
-      if (result.success) {
-        _showSuccessDialog(result.bookingReference!);
-      } else {
+      if (!result.success) {
+        setState(() => _isLoading = false);
         _showFailureDialog(result.errorCode!, result.errorMessage!);
+        return;
       }
+
+      // Step 2: Save subscription to backend
+      final planName =
+          _plans[_selectedPlan]['name'].toString().toUpperCase(); // MONTHLY | YEARLY
+      final token = await AuthService.getToken();
+      if (token != null) {
+        await http.post(
+          Uri.parse('${ApiConfig.BASE_URL}/subscription/subscribe'),
+          headers: {
+            'Content-Type': 'application/json',
+            'x-auth-token': token,
+          },
+          body: jsonEncode({
+            'plan': planName,
+            'paymentMethod': 'JAZZCASH',
+          }),
+        );
+      }
+
+      setState(() => _isLoading = false);
+      _showSuccessDialog(result.bookingReference!);
     } catch (e) {
       setState(() => _isLoading = false);
-      _showFailureDialog('NETWORK_ERROR', 'An unexpected error occurred. Please try again.');
+      _showFailureDialog(
+          'NETWORK_ERROR', 'An unexpected error occurred. Please try again.');
     }
   }
 

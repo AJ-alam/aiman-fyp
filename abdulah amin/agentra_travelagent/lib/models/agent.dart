@@ -12,11 +12,16 @@ class Agent {
   final String? cancellationPolicy;
   final String role;
   final bool isVerified;
-  final String status; // Added status field
-  final String? rejectionReason; // Added rejection reason
+  final String status;
+  final String? rejectionReason;
   final int totalPackages;
   final int totalBookings;
   final double averageRating;
+
+  // AI Subscription fields
+  final String subscriptionPlan;   // FREE | MONTHLY | YEARLY
+  final bool subscriptionActive;
+  final DateTime? subscriptionExpiry;
 
   Agent({
     required this.id,
@@ -32,14 +37,23 @@ class Agent {
     this.cancellationPolicy,
     this.role = 'AGENT',
     this.isVerified = false,
-    this.status = 'PENDING_APPROVAL', // Default status
+    this.status = 'PENDING_APPROVAL',
     this.rejectionReason,
     this.totalPackages = 0,
     this.totalBookings = 0,
     this.averageRating = 0.0,
+    this.subscriptionPlan = 'FREE',
+    this.subscriptionActive = false,
+    this.subscriptionExpiry,
   });
 
+  bool get isPro =>
+      subscriptionActive &&
+      (subscriptionPlan == 'MONTHLY' || subscriptionPlan == 'YEARLY') &&
+      (subscriptionExpiry == null || subscriptionExpiry!.isAfter(DateTime.now()));
+
   factory Agent.fromJson(Map<String, dynamic> json) {
+    final aiSub = json['aiSubscription'] as Map<String, dynamic>? ?? {};
     return Agent(
       id: json['_id'] ?? '',
       fullName: json['fullName'] ?? '',
@@ -54,11 +68,16 @@ class Agent {
       cancellationPolicy: json['cancellationPolicy'],
       role: json['role'] ?? 'AGENT',
       isVerified: json['isVerified'] ?? false,
-      status: json['status'] ?? 'PENDING_APPROVAL', // Parse status
-      rejectionReason: json['rejectionReason'], // Parse rejection reason
+      status: json['status'] ?? 'PENDING_APPROVAL',
+      rejectionReason: json['rejectionReason'],
       totalPackages: json['totalPackages'] ?? 0,
       totalBookings: json['totalBookings'] ?? 0,
       averageRating: (json['averageRating'] ?? 0).toDouble(),
+      subscriptionPlan: aiSub['plan'] ?? 'FREE',
+      subscriptionActive: aiSub['isActive'] ?? false,
+      subscriptionExpiry: aiSub['expiryDate'] != null
+          ? DateTime.tryParse(aiSub['expiryDate'])
+          : null,
     );
   }
 

@@ -85,6 +85,43 @@ class _SideNavigationState extends State<SideNavigation> {
                     ),
                   ),
                 ],
+                const SizedBox(height: 12),
+                // ── Plan Badge ──────────────────────────────────────
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 14, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: (_agent?.isPro ?? false)
+                        ? Colors.amber.shade600
+                        : Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        (_agent?.isPro ?? false)
+                            ? Icons.workspace_premium
+                            : Icons.card_membership_outlined,
+                        color: Colors.white,
+                        size: 14,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        (_agent?.isPro ?? false)
+                            ? (_agent!.subscriptionPlan == 'YEARLY'
+                                ? 'Pro Annual'
+                                : 'Pro Monthly')
+                            : 'Free Plan',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ],
             ),
           ),

@@ -1,6 +1,10 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import '../theme/app_theme.dart';
 import '../widgets/side_navigation.dart';
+import '../services/auth_service.dart';
+import '../config/api_config.dart';
 
 class SubscriptionScreen extends StatefulWidget {
   const SubscriptionScreen({Key? key}) : super(key: key);
@@ -11,24 +15,75 @@ class SubscriptionScreen extends StatefulWidget {
 
 class _SubscriptionScreenState extends State<SubscriptionScreen> {
   int _selectedNavIndex = 6;
+  bool _isLoading = true;
 
-  bool _isTrialActive = false;
-  final bool _isPremium = false;
-  int _daysLeft = 20;
-  final int _promotedUsers = 100;
-  final double _chatbotEngagement = 20.0;
+  // Subscription state loaded from backend
+  String _plan = 'FREE';       // FREE | MONTHLY | YEARLY
+  bool _isActive = false;
+  int _daysRemaining = 0;
+  DateTime? _endDate;
 
-  void _activateTrial() {
-    setState(() {
-      _isTrialActive = true;
-      _daysLeft = 30;
-    });
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Free trial activated! Enjoy 30 days of AI tools.'),
-        backgroundColor: Colors.green,
-      ),
-    );
+  @override
+  void initState() {
+    super.initState();
+    _loadSubscription();
+  }
+
+  Future<void> _loadSubscription() async {
+    setState(() => _isLoading = true);
+    try {
+      final token = await AuthService.getToken();
+      if (token == null) {
+        setState(() => _isLoading = false);
+        return;
+      }
+
+      final response = await http.get(
+        Uri.parse('${ApiConfig.BASE_URL}/subscription/current'),
+        headers: {'x-auth-token': token},
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final sub = data['subscription'];
+        if (mounted) {
+          setState(() {
+            _plan = sub['plan'] ?? 'FREE';
+            _isActive = sub['isActive'] ?? false;
+            _daysRemaining = sub['daysRemaining'] ?? 0;
+            _endDate = sub['endDate'] != null
+                ? DateTime.tryParse(sub['endDate'])
+                : null;
+          });
+        }
+      } else {
+        // 404 = no subscription yet → stays FREE
+        if (mounted) setState(() => _plan = 'FREE');
+      }
+    } catch (_) {}
+    if (mounted) setState(() => _isLoading = false);
+  }
+
+  bool get _isPro =>
+      _isActive &&
+      (_plan == 'MONTHLY' || _plan == 'YEARLY') &&
+      _daysRemaining > 0;
+
+  String get _planLabel {
+    if (_isPro) {
+      return _plan == 'YEARLY' ? 'Pro Annual Plan' : 'Pro Monthly Plan';
+    }
+    return 'Free Plan';
+  }
+
+  Color get _planColor {
+    if (_isPro) return Colors.amber.shade700;
+    return AppColors.primary;
+  }
+
+  IconData get _planIcon {
+    if (_isPro) return Icons.workspace_premium;
+    return Icons.card_membership_outlined;
   }
 
   @override
@@ -45,15 +100,14 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
           Expanded(
             child: Column(
               children: [
-                // Top Bar
+                // ── Top Bar ──────────────────────────────────────────
                 Container(
                   padding: const EdgeInsets.symmetric(
                       horizontal: 32, vertical: 20),
                   decoration: const BoxDecoration(
                     color: Colors.white,
                     border: Border(
-                      bottom:
-                          BorderSide(color: AppColors.border, width: 1),
+                      bottom: BorderSide(color: AppColors.border, width: 1),
                     ),
                   ),
                   child: Row(
@@ -66,56 +120,305 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                               style: AppTextStyles.headingMedium),
                           Text(
                             'Supercharge your travel business with AI',
-                            style: AppTextStyles.bodySmall.copyWith(
-                                color: AppColors.textTertiary),
+                            style: AppTextStyles.bodySmall
+                                .copyWith(color: AppColors.textTertiary),
                           ),
                         ],
                       ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: _isPremium
-                              ? Colors.amber.withOpacity(0.1)
-                              : _isTrialActive
-                                  ? Colors.green.withOpacity(0.1)
-                                  : AppColors.primary.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(
-                            color: _isPremium
-                                ? Colors.amber
-                                : _isTrialActive
-                                    ? Colors.green
-                                    : AppColors.primary,
+                      // ── Current Plan Badge ──────────────────────────
+                      _isLoading
+                          ? const SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 16, vertical: 10),
+                              decoration: BoxDecoration(
+                                color: _planColor.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(color: _planColor),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(_planIcon,
+                                      size: 18, color: _planColor),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    _planLabel,
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w800,
+                                      color: _planColor,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                  if (_isPro) ...[
+                                    const SizedBox(width: 8),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 8, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        color: _planColor,
+                                        borderRadius:
+                                            BorderRadius.circular(10),
+                                      ),
+                                      child: Text(
+                                        '$_daysRemaining days left',
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            ),
+                    ],
+                  ),
+                ),
+
+                // ── Content ──────────────────────────────────────────
+                Expanded(
+                  child: _isLoading
+                      ? const Center(child: CircularProgressIndicator())
+                      : RefreshIndicator(
+                          onRefresh: _loadSubscription,
+                          child: SingleChildScrollView(
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            padding: const EdgeInsets.all(32),
+                            child: Center(
+                              child: Container(
+                                constraints:
+                                    const BoxConstraints(maxWidth: 900),
+                                child: Column(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.start,
+                                  children: [
+                                    // ── Pro Active Banner ─────────────
+                                    if (_isPro) ...[
+                                      _buildProActiveBanner(),
+                                      const SizedBox(height: 32),
+                                    ],
+
+                                    // ── AI Tools Card ─────────────────
+                                    _buildAiToolsCard(),
+                                    const SizedBox(height: 32),
+
+                                    // ── Upgrade / Manage Banner ───────
+                                    if (_isPro)
+                                      _buildManagePlanBanner()
+                                    else
+                                      _buildUpgradeBanner(),
+                                  ],
+                                ),
+                              ),
+                            ),
                           ),
                         ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── Pro Active Banner ─────────────────────────────────────────────────────
+  Widget _buildProActiveBanner() {
+    return Container(
+      padding: const EdgeInsets.all(28),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Colors.amber.shade700, Colors.orange.shade500],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.amber.withOpacity(0.3),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: const Icon(Icons.workspace_premium,
+                color: Colors.white, size: 40),
+          ),
+          const SizedBox(width: 24),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Text(
+                      'You are on the ',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    Text(
+                      _planLabel,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    const Text(
+                      ' 🎉',
+                      style: TextStyle(fontSize: 20),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  _endDate != null
+                      ? 'Active until ${_endDate!.day}/${_endDate!.month}/${_endDate!.year}  •  $_daysRemaining days remaining'
+                      : 'Your AI tools are fully unlocked',
+                  style: TextStyle(
+                    color: Colors.white.withOpacity(0.9),
+                    fontSize: 14,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    _proChip('✓ AI Sales Agent'),
+                    _proChip('✓ AI Chatbot'),
+                    _proChip('✓ Advanced Analytics'),
+                    if (_plan == 'YEARLY') _proChip('✓ Priority Support'),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _proChip(String label) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white.withOpacity(0.4)),
+      ),
+      child: Text(
+        label,
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 12,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+    );
+  }
+
+  // ── AI Tools Card ─────────────────────────────────────────────────────────
+  Widget _buildAiToolsCard() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          // Card header
+          Container(
+            padding: const EdgeInsets.all(32),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  AppColors.primary,
+                  AppColors.primary.withOpacity(0.7),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(24),
+                topRight: Radius.circular(24),
+              ),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: const Icon(Icons.smart_toy_outlined,
+                      color: Colors.white, size: 32),
+                ),
+                const SizedBox(width: 20),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'AI Sales Agent & Customer Support Chatbot',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 22,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: _isPro ? Colors.green : Colors.amber,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
                         child: Row(
+                          mainAxisSize: MainAxisSize.min,
                           children: [
                             Icon(
-                              _isPremium
-                                  ? Icons.workspace_premium
-                                  : Icons.card_membership_outlined,
-                              size: 16,
-                              color: _isPremium
-                                  ? Colors.amber
-                                  : _isTrialActive
-                                      ? Colors.green
-                                      : AppColors.primary,
+                              _isPro
+                                  ? Icons.check_circle
+                                  : Icons.star,
+                              color: Colors.white,
+                              size: 14,
                             ),
-                            const SizedBox(width: 6),
+                            const SizedBox(width: 4),
                             Text(
-                              _isPremium
-                                  ? 'Premium Plan'
-                                  : _isTrialActive
-                                      ? 'Free Trial Active'
-                                      : 'Free Plan',
-                              style: TextStyle(
+                              _isPro
+                                  ? 'Active on your plan'
+                                  : 'Free 1 Month Trial',
+                              style: const TextStyle(
+                                color: Colors.white,
                                 fontWeight: FontWeight.w700,
-                                color: _isPremium
-                                    ? Colors.amber
-                                    : _isTrialActive
-                                        ? Colors.green
-                                        : AppColors.primary,
+                                fontSize: 13,
                               ),
                             ),
                           ],
@@ -124,378 +427,301 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                     ],
                   ),
                 ),
-                // Content
-                Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(32),
-                    child: Center(
-                      child: Container(
-                        constraints: const BoxConstraints(maxWidth: 900),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // ── AI Tools Card ──────────────────────────
-                            Container(
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(24),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.04),
-                                    blurRadius: 20,
-                                    offset: const Offset(0, 10),
-                                  ),
-                                ],
-                              ),
-                              child: Column(
-                                children: [
-                                  // Card header
-                                  Container(
-                                    padding: const EdgeInsets.all(32),
-                                    decoration: BoxDecoration(
-                                      gradient: LinearGradient(
-                                        colors: [
-                                          AppColors.primary,
-                                          AppColors.primary.withOpacity(0.7),
-                                        ],
-                                        begin: Alignment.topLeft,
-                                        end: Alignment.bottomRight,
-                                      ),
-                                      borderRadius: const BorderRadius.only(
-                                        topLeft: Radius.circular(24),
-                                        topRight: Radius.circular(24),
-                                      ),
-                                    ),
-                                    child: Row(
-                                      children: [
-                                        Container(
-                                          padding: const EdgeInsets.all(16),
-                                          decoration: BoxDecoration(
-                                            color: Colors.white.withOpacity(0.2),
-                                            borderRadius: BorderRadius.circular(16),
-                                          ),
-                                          child: const Icon(
-                                              Icons.smart_toy_outlined,
-                                              color: Colors.white,
-                                              size: 32),
-                                        ),
-                                        const SizedBox(width: 20),
-                                        Expanded(
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              const Text(
-                                                'AI Sales Agent & Customer Support Chatbot',
-                                                style: TextStyle(
-                                                  color: Colors.white,
-                                                  fontSize: 22,
-                                                  fontWeight: FontWeight.w900,
-                                                ),
-                                              ),
-                                              const SizedBox(height: 8),
-                                              Container(
-                                                padding: const EdgeInsets.symmetric(
-                                                    horizontal: 12, vertical: 6),
-                                                decoration: BoxDecoration(
-                                                  color: Colors.amber,
-                                                  borderRadius:
-                                                      BorderRadius.circular(20),
-                                                ),
-                                                child: const Row(
-                                                  mainAxisSize: MainAxisSize.min,
-                                                  children: [
-                                                    Icon(Icons.star,
-                                                        color: Colors.white,
-                                                        size: 14),
-                                                    SizedBox(width: 4),
-                                                    Text(
-                                                      'Free 1 Month Trial',
-                                                      style: TextStyle(
-                                                        color: Colors.white,
-                                                        fontWeight: FontWeight.w700,
-                                                        fontSize: 13,
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                        if (_isTrialActive)
-                                          Column(
-                                            children: [
-                                              Container(
-                                                padding: const EdgeInsets.symmetric(
-                                                    horizontal: 16, vertical: 8),
-                                                decoration: BoxDecoration(
-                                                  color: Colors.green,
-                                                  borderRadius:
-                                                      BorderRadius.circular(20),
-                                                ),
-                                                child: const Text(
-                                                  'Active',
-                                                  style: TextStyle(
-                                                    color: Colors.white,
-                                                    fontWeight: FontWeight.w700,
-                                                  ),
-                                                ),
-                                              ),
-                                              const SizedBox(height: 8),
-                                              Text(
-                                                'Days Left: $_daysLeft',
-                                                style: const TextStyle(
-                                                  color: Colors.white,
-                                                  fontWeight: FontWeight.w600,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                      ],
-                                    ),
-                                  ),
-                                  // Card body
-                                  Padding(
-                                    padding: const EdgeInsets.all(32),
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        const Text(
-                                          'What you get:',
-                                          style: TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.w800,
-                                            color: Color(0xFF1B1E28),
-                                          ),
-                                        ),
-                                        const SizedBox(height: 16),
-                                        ...[
-                                          {
-                                            'icon': Icons.campaign_outlined,
-                                            'text': 'Promote your packages to suitable users automatically',
-                                            'color': Colors.blue,
-                                          },
-                                          {
-                                            'icon': Icons.chat_bubble_outline,
-                                            'text': 'Let AI chatbot answer queries about your packages 24/7',
-                                            'color': Colors.purple,
-                                          },
-                                          {
-                                            'icon': Icons.trending_up_outlined,
-                                            'text': 'Get more bookings with AI-powered recommendations',
-                                            'color': Colors.green,
-                                          },
-                                          {
-                                            'icon': Icons.analytics_outlined,
-                                            'text': 'Track promotion performance and chatbot engagement',
-                                            'color': Colors.orange,
-                                          },
-                                        ].map((feature) => Padding(
-                                              padding: const EdgeInsets.only(bottom: 16),
-                                              child: Row(
-                                                children: [
-                                                  Container(
-                                                    padding: const EdgeInsets.all(10),
-                                                    decoration: BoxDecoration(
-                                                      color: (feature['color'] as Color)
-                                                          .withOpacity(0.1),
-                                                      borderRadius:
-                                                          BorderRadius.circular(12),
-                                                    ),
-                                                    child: Icon(
-                                                      feature['icon'] as IconData,
-                                                      color: feature['color'] as Color,
-                                                      size: 20,
-                                                    ),
-                                                  ),
-                                                  const SizedBox(width: 16),
-                                                  Expanded(
-                                                    child: Text(
-                                                      feature['text'] as String,
-                                                      style: const TextStyle(
-                                                        fontSize: 15,
-                                                        color: Color(0xFF4A4A4A),
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            )),
-                                        if (_isTrialActive) ...[
-                                          const SizedBox(height: 8),
-                                          const Divider(),
-                                          const SizedBox(height: 16),
-                                          const Text(
-                                            'Your AI Performance',
-                                            style: TextStyle(
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.w800,
-                                              color: Color(0xFF1B1E28),
-                                            ),
-                                          ),
-                                          const SizedBox(height: 16),
-                                          Row(
-                                            children: [
-                                              Expanded(
-                                                child: _buildStatBox(
-                                                  'Packages Promoted to',
-                                                  '$_promotedUsers Users',
-                                                  Icons.people_outlined,
-                                                  Colors.blue,
-                                                ),
-                                              ),
-                                              const SizedBox(width: 16),
-                                              Expanded(
-                                                child: _buildStatBox(
-                                                  'Chatbot Engagement',
-                                                  '$_chatbotEngagement%',
-                                                  Icons.chat_bubble_outline,
-                                                  Colors.purple,
-                                                ),
-                                              ),
-                                              const SizedBox(width: 16),
-                                              Expanded(
-                                                child: _buildStatBox(
-                                                  'Days Remaining',
-                                                  '$_daysLeft days',
-                                                  Icons.timer_outlined,
-                                                  Colors.orange,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ],
-                                        const SizedBox(height: 24),
-                                        SizedBox(
-                                          width: double.infinity,
-                                          child: !_isTrialActive
-                                              ? ElevatedButton(
-                                                  onPressed: _activateTrial,
-                                                  style: ElevatedButton.styleFrom(
-                                                    backgroundColor: AppColors.primary,
-                                                    padding: const EdgeInsets.symmetric(
-                                                        vertical: 16),
-                                                    shape: RoundedRectangleBorder(
-                                                      borderRadius:
-                                                          BorderRadius.circular(12),
-                                                    ),
-                                                  ),
-                                                  child: const Text(
-                                                    'Activate Free Trial',
-                                                    style: TextStyle(
-                                                      color: Colors.white,
-                                                      fontSize: 16,
-                                                      fontWeight: FontWeight.w700,
-                                                    ),
-                                                  ),
-                                                )
-                                              : OutlinedButton(
-                                                  onPressed: null,
-                                                  style: OutlinedButton.styleFrom(
-                                                    padding: const EdgeInsets.symmetric(
-                                                        vertical: 16),
-                                                    side: const BorderSide(
-                                                        color: Colors.green),
-                                                    shape: RoundedRectangleBorder(
-                                                      borderRadius:
-                                                          BorderRadius.circular(12),
-                                                    ),
-                                                  ),
-                                                  child: const Text(
-                                                    '✓ Trial Active',
-                                                    style: TextStyle(
-                                                      color: Colors.green,
-                                                      fontSize: 16,
-                                                      fontWeight: FontWeight.w700,
-                                                    ),
-                                                  ),
-                                                ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(height: 32),
-
-                            // ── Upgrade Banner ─────────────────────────
-                            Container(
-                              padding: const EdgeInsets.all(32),
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  colors: [
-                                    Colors.amber.shade700,
-                                    Colors.orange.shade600,
-                                  ],
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                ),
-                                borderRadius: BorderRadius.circular(24),
-                              ),
-                              child: Row(
-                                children: [
-                                  const Icon(Icons.workspace_premium,
-                                      color: Colors.white, size: 48),
-                                  const SizedBox(width: 24),
-                                  const Expanded(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          'Upgrade to Premium',
-                                          style: TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 22,
-                                            fontWeight: FontWeight.w900,
-                                          ),
-                                        ),
-                                        SizedBox(height: 4),
-                                        Text(
-                                          'Get unlimited AI promotion, priority listings and advanced analytics',
-                                          style: TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 14,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  const SizedBox(width: 24),
-                                  ElevatedButton(
-                                    // ✅ NOW NAVIGATES TO PAYMENT PAGE
-                                    onPressed: () => Navigator.pushNamed(
-                                        context, '/premium-payment'),
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.white,
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 32, vertical: 16),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                    ),
-                                    child: Text(
-                                      'Upgrade Now',
-                                      style: TextStyle(
-                                        color: Colors.amber.shade700,
-                                        fontWeight: FontWeight.w800,
-                                        fontSize: 15,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
+                if (_isPro)
+                  Column(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: Colors.green,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: const Text(
+                          'Active',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
                       ),
+                      const SizedBox(height: 8),
+                      Text(
+                        '$_daysRemaining days left',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+              ],
+            ),
+          ),
+          // Card body
+          Padding(
+            padding: const EdgeInsets.all(32),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'What you get:',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFF1B1E28),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                ...[
+                  {
+                    'icon': Icons.campaign_outlined,
+                    'text':
+                        'Promote your packages to suitable users automatically',
+                    'color': Colors.blue,
+                  },
+                  {
+                    'icon': Icons.chat_bubble_outline,
+                    'text':
+                        'Let AI chatbot answer queries about your packages 24/7',
+                    'color': Colors.purple,
+                  },
+                  {
+                    'icon': Icons.trending_up_outlined,
+                    'text':
+                        'Get more bookings with AI-powered recommendations',
+                    'color': Colors.green,
+                  },
+                  {
+                    'icon': Icons.analytics_outlined,
+                    'text':
+                        'Track promotion performance and chatbot engagement',
+                    'color': Colors.orange,
+                  },
+                ].map(
+                  (feature) => Padding(
+                    padding: const EdgeInsets.only(bottom: 16),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: (feature['color'] as Color)
+                                .withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Icon(
+                            feature['icon'] as IconData,
+                            color: feature['color'] as Color,
+                            size: 20,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Text(
+                            feature['text'] as String,
+                            style: const TextStyle(
+                              fontSize: 15,
+                              color: Color(0xFF4A4A4A),
+                            ),
+                          ),
+                        ),
+                        if (_isPro)
+                          const Icon(Icons.check_circle,
+                              color: Colors.green, size: 20),
+                      ],
                     ),
+                  ),
+                ),
+                if (_isPro) ...[
+                  const SizedBox(height: 8),
+                  const Divider(),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Your AI Performance',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                      color: Color(0xFF1B1E28),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildStatBox(
+                          'Plan',
+                          _plan == 'YEARLY' ? 'Annual' : 'Monthly',
+                          Icons.workspace_premium,
+                          Colors.amber.shade700,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: _buildStatBox(
+                          'Days Remaining',
+                          '$_daysRemaining days',
+                          Icons.timer_outlined,
+                          Colors.orange,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: _buildStatBox(
+                          'AI Tools',
+                          'All Active',
+                          Icons.smart_toy_outlined,
+                          Colors.green,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── Upgrade Banner (shown when FREE) ──────────────────────────────────────
+  Widget _buildUpgradeBanner() {
+    return Container(
+      padding: const EdgeInsets.all(32),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Colors.amber.shade700, Colors.orange.shade600],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(24),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.workspace_premium,
+              color: Colors.white, size: 48),
+          const SizedBox(width: 24),
+          const Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Upgrade to Pro',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 22,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                SizedBox(height: 4),
+                Text(
+                  'Get unlimited AI promotion, priority listings and advanced analytics',
+                  style: TextStyle(color: Colors.white, fontSize: 14),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 24),
+          ElevatedButton(
+            onPressed: () => Navigator.pushNamed(context, '/premium-payment')
+                .then((_) => _loadSubscription()),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(
+                  horizontal: 32, vertical: 16),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            child: Text(
+              'Upgrade Now',
+              style: TextStyle(
+                color: Colors.amber.shade700,
+                fontWeight: FontWeight.w800,
+                fontSize: 15,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── Manage Plan Banner (shown when PRO) ───────────────────────────────────
+  Widget _buildManagePlanBanner() {
+    return Container(
+      padding: const EdgeInsets.all(28),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Colors.amber.shade200, width: 2),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.amber.withOpacity(0.08),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: Colors.amber.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Icon(Icons.workspace_premium,
+                color: Colors.amber.shade700, size: 32),
+          ),
+          const SizedBox(width: 20),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'You\'re on the $_planLabel',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w900,
+                    color: Colors.amber.shade800,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  _endDate != null
+                      ? 'Renews on ${_endDate!.day}/${_endDate!.month}/${_endDate!.year}'
+                      : 'All AI features are active',
+                  style: TextStyle(
+                    color: Colors.amber.shade700,
+                    fontSize: 13,
                   ),
                 ),
               ],
             ),
           ),
+          if (_plan == 'MONTHLY')
+            OutlinedButton(
+              onPressed: () =>
+                  Navigator.pushNamed(context, '/premium-payment')
+                      .then((_) => _loadSubscription()),
+              style: OutlinedButton.styleFrom(
+                side: BorderSide(color: Colors.amber.shade700),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 20, vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: Text(
+                'Upgrade to Annual',
+                style: TextStyle(
+                  color: Colors.amber.shade700,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
         ],
       ),
     );
@@ -518,7 +744,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
           Text(
             value,
             style: TextStyle(
-              fontSize: 22,
+              fontSize: 20,
               fontWeight: FontWeight.w900,
               color: color,
             ),
