@@ -1,8 +1,12 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:http/http.dart' as http;
 import '../../theme/app_theme.dart';
 import '../../widgets/custom_input.dart';
 import '../../services/auth_service.dart';
 import '../../models/user.dart';
+import '../../config/api_config.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -14,18 +18,17 @@ class EditProfileScreen extends StatefulWidget {
 class _EditProfileScreenState extends State<EditProfileScreen> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _nameController;
-  late TextEditingController _bioController;
   late TextEditingController _locationController;
   late TextEditingController _contactController;
   bool _isLoading = true;
   bool _isSaving = false;
   User? _currentUser;
+  String? _newProfileImageUrl; // holds URL after upload
 
   @override
   void initState() {
     super.initState();
     _nameController = TextEditingController();
-    _bioController = TextEditingController();
     _locationController = TextEditingController();
     _contactController = TextEditingController();
     _loadUserData();
@@ -38,9 +41,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         _currentUser = user;
         if (user != null) {
           _nameController.text = user.fullName;
-          _bioController.text = user.bio ?? '';
           _contactController.text = user.phone ?? '';
-          // Location isn't in User model yet, using placeholder or could add to model
           _locationController.text = 'Pakistan'; 
         }
         _isLoading = false;
@@ -51,7 +52,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   @override
   void dispose() {
     _nameController.dispose();
-    _bioController.dispose();
     _locationController.dispose();
     _contactController.dispose();
     super.dispose();
@@ -60,23 +60,44 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   Future<void> _saveProfile() async {
     if (_formKey.currentState!.validate()) {
       setState(() => _isSaving = true);
-      
-      final success = await AuthService.updateProfile(
-        fullName: _nameController.text.trim(),
-        bio: _bioController.text.trim(),
-        phone: _contactController.text.trim(),
-      );
+
+      final updateBody = <String, dynamic>{
+        'fullName': _nameController.text.trim(),
+        'phone': _contactController.text.trim(),
+      };
+      if (_newProfileImageUrl != null) {
+        updateBody['profileImage'] = _newProfileImageUrl;
+      }
+
+      final token = await AuthService.getToken();
+      bool success = false;
+      if (token != null) {
+        try {
+          final response = await http.put(
+            Uri.parse(ApiConfig.UPDATE_PROFILE),
+            headers: {
+              'Content-Type': 'application/json',
+              'x-auth-token': token,
+            },
+            body: jsonEncode(updateBody),
+          );
+          if (response.statusCode == 200) {
+            AuthService.clearCache();
+            success = true;
+          }
+        } catch (_) {}
+      }
 
       if (mounted) {
         setState(() => _isSaving = false);
         if (success) {
-          Navigator.pop(context, true);
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Profile updated successfully!'),
               backgroundColor: AppColors.success,
             ),
           );
+          Navigator.pop(context, true);
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -86,6 +107,54 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           );
         }
       }
+    }
+  }
+
+  Future<void> _pickAndUploadImage() async {
+    final picker = ImagePicker();
+    final XFile? picked =
+        await picker.pickImage(source: ImageSource.gallery, imageQuality: 80);
+    if (picked == null) return;
+
+    setState(() => _isSaving = true);
+    try {
+      final token = await AuthService.getToken();
+      if (token == null) return;
+
+      final request = http.MultipartRequest(
+        'POST',
+        Uri.parse('${ApiConfig.SERVER_URL}/api/upload/image'),
+      );
+      request.headers['x-auth-token'] = token;
+      request.files
+          .add(await http.MultipartFile.fromPath('image', picked.path));
+
+      final streamed = await request.send();
+      final body = await streamed.stream.bytesToString();
+      final data = jsonDecode(body);
+
+      if (streamed.statusCode == 200 && data['success'] == true) {
+        setState(() {
+          _newProfileImageUrl = data['url'];
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content: Text('Image uploaded. Tap Done to save.'),
+              backgroundColor: Colors.green),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content: Text('Image upload failed'),
+              backgroundColor: Colors.red),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Upload error: $e'), backgroundColor: Colors.red),
+      );
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
     }
   }
 
@@ -153,9 +222,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                           shape: BoxShape.circle,
                           color: const Color(0xFFFFD5C0),
                           image: DecorationImage(
-                            image: (_currentUser?.profileImage != null && _currentUser!.profileImage!.isNotEmpty)
-                                ? NetworkImage(_currentUser!.profileImage!)
-                                : const NetworkImage('https://api.dicebear.com/7.x/avataaars/png?seed=Aiman'),
+                            image: (_newProfileImageUrl != null && _newProfileImageUrl!.isNotEmpty)
+                                ? NetworkImage(_newProfileImageUrl!) as ImageProvider
+                                : (_currentUser?.profileImage != null && _currentUser!.profileImage!.isNotEmpty)
+                                    ? NetworkImage(_currentUser!.profileImage!) as ImageProvider
+                                    : const NetworkImage('https://api.dicebear.com/7.x/avataaars/png?seed=Aiman'),
                             fit: BoxFit.cover,
                           ),
                         ),
@@ -170,9 +241,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       ),
                       const SizedBox(height: 4),
                       GestureDetector(
-                        onTap: () {
-                          // Handle change profile picture
-                        },
+                        onTap: _pickAndUploadImage,
                         child: const Text(
                           'Change Profile Picture',
                           style: TextStyle(
@@ -191,12 +260,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   controller: _nameController,
                   suffixIcon: _buildCheckIcon(),
                   validator: (val) => val == null || val.isEmpty ? 'Name cannot be empty' : null,
-                ),
-                const SizedBox(height: 20),
-                _buildFieldLabel('Bio'),
-                CustomInput(
-                  controller: _bioController,
-                  suffixIcon: _buildCheckIcon(),
                 ),
                 const SizedBox(height: 20),
                 _buildFieldLabel('Location'),

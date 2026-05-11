@@ -51,6 +51,31 @@ exports.createBooking = async (req, res) => {
       paymentStatus: 'PAID'
     });
 
+    // Create a transaction record so it appears in payment history
+    const Transaction = require('../models/Transaction');
+    const transactionId = `TXN-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    
+    const commissionRate = 0.15;
+    const commissionAmount = totalAmount * commissionRate;
+    const earningAmount = totalAmount - commissionAmount;
+
+    await Transaction.create({
+      agentId: pkg.agentId,
+      bookingId: booking._id,
+      packageId: packageId,
+      userId: req.user.id,
+      type: 'EARNING',
+      amount: totalAmount, // Show full amount to user in history
+      commissionRate: commissionRate * 100,
+      commissionAmount: commissionAmount,
+      payoutStatus: 'PENDING',
+      paymentMethod,
+      paymentDetails: {
+        transactionId,
+        jazzCashNumber: req.body.jazzCashNumber || ''
+      }
+    });
+
     await Package.findByIdAndUpdate(packageId, { $inc: { availableSeats: -seats } });
     await User.findByIdAndUpdate(req.user.id, { $inc: { totalBookings: 1 } });
 

@@ -8,7 +8,7 @@ const bookingController = require('../controllers/booking.controller');
 // ========== USER ==========
 router.post('/', protect, role('USER'), bookingController.createBooking);
 router.get('/my', protect, role('USER'), bookingController.getUserBookings);
-router.put('/:id/cancel', protect, role('USER'), bookingController.cancelBooking);
+router.put('/:id/cancel', protect, role('USER', 'AGENT'), bookingController.cancelBooking);
 
 // ========== AGENT ==========
 router.get('/agent', protect, role('AGENT'), bookingController.getAgentBookings);

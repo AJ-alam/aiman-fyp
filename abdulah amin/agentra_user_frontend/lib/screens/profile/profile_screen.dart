@@ -36,9 +36,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (mounted) {
       setState(() {
         _user = user;
-        // Filter for completed or at least confirmed bookings to show as "trips"
+        // Filter for strictly completed bookings to show as "trips"
+        // Also filter out any that might have broken package references (Unknown Package)
         _completedBookings = bookings.where((b) => 
-          b.status.toLowerCase() == 'completed' || b.status.toLowerCase() == 'confirmed'
+          b.status.toLowerCase() == 'completed' && b.packageTitle != 'Unknown Package'
         ).toList();
         _isLoading = false;
       });

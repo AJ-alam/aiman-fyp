@@ -28,18 +28,12 @@ class FavoritesScreen extends StatelessWidget {
           mainAxisSpacing: 16,
           childAspectRatio: 0.85,
         ),
-        itemCount: 8,
+        itemCount: 0,
         itemBuilder: (context, index) {
-          final places = [
-            'Nathia Gali',
-            'Murree',
-            'Lahore',
-            'Karachi',
-            'Hunza',
-            'Skardu',
-            'Swat',
-            'Gilgit'
-          ];
+          final List<String> places = [];
+          if (places.isEmpty) {
+            return const Center(child: Text('No favorites yet'));
+          }
           return _buildFavoriteCard(places[index], 'Pakistan');
         },
       ),
