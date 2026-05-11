@@ -12,8 +12,19 @@ exports.getProfile = async (req, res) => {
 };
 
 exports.updateProfile = async (req, res) => {
-  const updated = await User.findByIdAndUpdate(req.user.id, req.body, { new: true });
-  res.json({ success: true, user: updated });
+  try {
+    const allowed = ['fullName', 'phone', 'profileImage', 'bio', 'preferences'];
+    const updateData = {};
+    allowed.forEach((key) => {
+      if (req.body[key] !== undefined) {
+        updateData[key] = req.body[key];
+      }
+    });
+    const updated = await User.findByIdAndUpdate(req.user.id, updateData, { new: true }).select('-password');
+    res.json({ success: true, user: updated });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
 };
 
 // ================= BOOKINGS =================
@@ -55,7 +66,7 @@ exports.createBooking = async (req, res) => {
     });
 
     await Package.findByIdAndUpdate(packageId, { $inc: { availableSeats: -seats } });
-    await User.findByIdAndUpdate(req.user.id, { $inc: { totalBookings: 1 } });
+    await User.findByIdAndUpdate(req.user.id, { $inc: { totalBookings: 1, rewardPoints: 10 } });
 
     res.status(201).json({ success: true, booking });
 
@@ -144,4 +155,34 @@ exports.updatePreferences = async (req, res) => {
 exports.deactivateAccount = async (req, res) => {
   await User.findByIdAndUpdate(req.user.id, { isActive: false });
   res.json({ success: true, message: "Account deactivated" });
+};
+
+// ================= REWARD POINTS =================
+exports.getRewardPoints = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select('rewardPoints fullName');
+    res.json({ success: true, rewardPoints: user.rewardPoints || 0 });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// ================= COMPLETED TRIPS =================
+exports.getCompletedTrips = async (req, res) => {
+  try {
+    const bookings = await Booking.find({
+      userId: req.user.id,
+      $or: [
+        { status: 'COMPLETED' },
+        { travelDate: { $lt: new Date() }, status: 'CONFIRMED' }
+      ]
+    })
+      .populate('packageId', 'title location price images image duration rating')
+      .populate('agentId', 'fullName businessName')
+      .sort({ travelDate: -1 });
+
+    res.json({ success: true, completedTrips: bookings, total: bookings.length });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
 };

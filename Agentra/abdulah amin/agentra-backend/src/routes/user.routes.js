@@ -28,4 +28,10 @@ router.put('/preferences', protect, role('USER'), userController.updatePreferenc
 // ================= ACCOUNT =================
 router.patch('/deactivate', protect, role('USER'), userController.deactivateAccount);
 
+// ================= REWARD POINTS =================
+router.get('/rewards', protect, role('USER'), userController.getRewardPoints);
+
+// ================= COMPLETED TRIPS =================
+router.get('/completed-trips', protect, role('USER'), userController.getCompletedTrips);
+
 module.exports = router;

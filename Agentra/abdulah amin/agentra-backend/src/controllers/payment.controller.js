@@ -170,20 +170,8 @@ exports.getPaymentMethods = async (req, res) => {
   try {
     const paymentMethods = [
       {
-        id: 'card',
-        name: 'Credit/Debit Card',
-        icon: 'credit-card',
-        supported: true
-      },
-      {
         id: 'jazzcash',
         name: 'JazzCash',
-        icon: 'mobile',
-        supported: true
-      },
-      {
-        id: 'easypaisa',
-        name: 'EasyPaisa',
         icon: 'mobile',
         supported: true
       },
@@ -198,7 +186,6 @@ exports.getPaymentMethods = async (req, res) => {
     res.json({
       success: true,
       paymentMethods,
-      // Compatibility for legacy frontend readers.
       methods: paymentMethods.map((method) => method.id.toUpperCase())
     });
   } catch (error) {

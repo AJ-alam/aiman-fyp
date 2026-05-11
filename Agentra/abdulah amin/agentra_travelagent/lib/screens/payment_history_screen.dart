@@ -1,4 +1,8 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import '../config/api_config.dart';
+import '../services/auth_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/side_navigation.dart';
 
@@ -14,93 +18,18 @@ class _PaymentHistoryScreenState extends State<PaymentHistoryScreen>
   int _selectedNavIndex = 5;
   late TabController _tabController;
 
-  // Dummy data
-  final List<Map<String, dynamic>> _subscriptionPayments = [
-    {
-      'plan': 'Premium Plan',
-      'date': '1 Mar 2026',
-      'amount': 5000,
-      'status': 'Paid',
-      'method': 'JazzCash',
-    },
-    {
-      'plan': 'Premium Plan',
-      'date': '1 Feb 2026',
-      'amount': 5000,
-      'status': 'Paid',
-      'method': 'EasyPaisa',
-    },
-    {
-      'plan': 'Basic Plan',
-      'date': '1 Jan 2026',
-      'amount': 2000,
-      'status': 'Paid',
-      'method': 'Bank Transfer',
-    },
-  ];
+  bool _isLoading = true;
+  String? _error;
 
-  final List<Map<String, dynamic>> _packageSales = [
-    {
-      'package': 'Nathia Gali Adventure',
-      'customer': 'Ahmed Khan',
-      'date': '10 Mar 2026',
-      'amount': 15000,
-      'commission': 1500,
-      'net': 13500,
-      'status': 'Received',
-    },
-    {
-      'package': 'Lahore City Tour',
-      'customer': 'Sara Ali',
-      'date': '8 Mar 2026',
-      'amount': 8000,
-      'commission': 800,
-      'net': 7200,
-      'status': 'Received',
-    },
-    {
-      'package': 'Hunza Valley Trip',
-      'customer': 'Usman Tariq',
-      'date': '5 Mar 2026',
-      'amount': 25000,
-      'commission': 2500,
-      'net': 22500,
-      'status': 'Pending',
-    },
-    {
-      'package': 'Swat Valley Tour',
-      'customer': 'Ayesha Malik',
-      'date': '1 Mar 2026',
-      'amount': 12000,
-      'commission': 1200,
-      'net': 10800,
-      'status': 'Received',
-    },
-  ];
-
-  final List<Map<String, dynamic>> _refunds = [
-    {
-      'package': 'Hunza Valley Trip',
-      'customer': 'Ali Hassan',
-      'date': '12 Mar 2026',
-      'amount': 25000,
-      'reason': 'Trip cancelled by customer',
-      'status': 'Processed',
-    },
-    {
-      'package': 'Nathia Gali Adventure',
-      'customer': 'Fatima Zahra',
-      'date': '7 Mar 2026',
-      'amount': 15000,
-      'reason': 'Weather conditions',
-      'status': 'Pending',
-    },
-  ];
+  List<Map<String, dynamic>> _earnings = [];
+  List<Map<String, dynamic>> _subscriptions = [];
+  List<Map<String, dynamic>> _refunds = [];
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+    _fetchPaymentHistory();
   }
 
   @override
@@ -109,23 +38,102 @@ class _PaymentHistoryScreenState extends State<PaymentHistoryScreen>
     super.dispose();
   }
 
-  // Summary calculations
-  double get _totalEarned => _packageSales
-      .where((s) => s['status'] == 'Received')
-      .fold(0.0, (sum, s) => sum + (s['net'] as int));
+  Future<void> _fetchPaymentHistory() async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+    try {
+      final token = await AuthService.getToken();
+      if (token == null) {
+        setState(() {
+          _error = 'Not logged in. Please log in again.';
+          _isLoading = false;
+        });
+        return;
+      }
 
-  double get _totalSubscriptions => _subscriptionPayments
-      .fold(0.0, (sum, s) => sum + (s['amount'] as int));
+      final response = await http.get(
+        Uri.parse('${ApiConfig.BASE_URL}/api/earnings/transactions'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200 && data['success'] == true) {
+        final List raw = data['transactions'] ?? [];
+        final all =
+            raw.map((t) => Map<String, dynamic>.from(t)).toList();
+
+        setState(() {
+          _earnings =
+              all.where((t) => t['type'] == 'EARNING').toList();
+          _subscriptions =
+              all.where((t) => t['type'] == 'SUBSCRIPTION').toList();
+          _refunds =
+              all.where((t) => t['type'] == 'REFUND').toList();
+          _isLoading = false;
+        });
+      } else {
+        setState(() {
+          _error = data['message'] ?? 'Failed to load payment history';
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _error = 'Network error: $e';
+        _isLoading = false;
+      });
+    }
+  }
+
+  double get _totalEarned => _earnings
+      .where((t) => t['payoutStatus'] == 'PAID')
+      .fold(0.0, (sum, t) => sum + ((t['amount'] ?? 0) as num).toDouble());
+
+  double get _totalSubscriptions => _subscriptions
+      .fold(0.0, (sum, t) => sum + ((t['amount'] ?? 0) as num).toDouble());
 
   double get _totalRefunded => _refunds
-      .where((r) => r['status'] == 'Processed')
-      .fold(0.0, (sum, r) => sum + (r['amount'] as int));
+      .where((t) => t['payoutStatus'] == 'PAID')
+      .fold(0.0, (sum, t) => sum + ((t['amount'] ?? 0) as num).toDouble());
 
-  double get _totalCommission => _packageSales
-      .fold(0.0, (sum, s) => sum + (s['commission'] as int));
+  double get _totalCommission => _earnings
+      .fold(0.0, (sum, t) => sum + ((t['commissionAmount'] ?? 0) as num).toDouble());
 
-  double get _netAmount =>
-      _totalEarned - _totalSubscriptions - _totalRefunded - _totalCommission;
+  String _formatDate(String? dateStr) {
+    if (dateStr == null) return 'N/A';
+    try {
+      final dt = DateTime.parse(dateStr);
+      return '${dt.day} ${_monthName(dt.month)} ${dt.year}';
+    } catch (_) {
+      return dateStr;
+    }
+  }
+
+  String _monthName(int m) {
+    const months = [
+      '', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+    ];
+    return months[m];
+  }
+
+  String _getPackageTitle(Map<String, dynamic> t) {
+    final pkg = t['packageId'];
+    if (pkg is Map) return pkg['title'] ?? 'Unknown Package';
+    return 'Unknown Package';
+  }
+
+  String _getUserName(Map<String, dynamic> t) {
+    final user = t['userId'];
+    if (user is Map) return user['fullName'] ?? 'Unknown';
+    return 'Unknown';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -166,129 +174,149 @@ class _PaymentHistoryScreenState extends State<PaymentHistoryScreen>
                           ),
                         ],
                       ),
-                      ElevatedButton.icon(
-                        onPressed: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                                content:
-                                    Text('Report download coming soon!')),
-                          );
-                        },
-                        icon: const Icon(Icons.download_outlined,
-                            color: Colors.white),
-                        label: const Text('Download Report',
-                            style: TextStyle(color: Colors.white)),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primary,
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 24, vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
+                      IconButton(
+                        onPressed: _fetchPaymentHistory,
+                        icon: const Icon(Icons.refresh,
+                            color: AppColors.primary),
+                        tooltip: 'Refresh',
                       ),
                     ],
                   ),
                 ),
-                // Content
+                // Body
                 Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(32),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-
-                        // ── Summary Cards ──────────────────────────────
-                        GridView.count(
-                          crossAxisCount: 5,
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          crossAxisSpacing: 16,
-                          mainAxisSpacing: 16,
-                          childAspectRatio: 1.4,
-                          children: [
-                            _buildSummaryCard(
-                              'Total Earned',
-                              'PKR ${_totalEarned.toStringAsFixed(0)}',
-                              Icons.trending_up,
-                              Colors.green,
-                            ),
-                            _buildSummaryCard(
-                              'Paid to Subscriptions',
-                              'PKR ${_totalSubscriptions.toStringAsFixed(0)}',
-                              Icons.card_membership_outlined,
-                              Colors.blue,
-                            ),
-                            _buildSummaryCard(
-                              'Refunded Amount',
-                              'PKR ${_totalRefunded.toStringAsFixed(0)}',
-                              Icons.undo_outlined,
-                              Colors.orange,
-                            ),
-                            _buildSummaryCard(
-                              'Commission',
-                              'PKR ${_totalCommission.toStringAsFixed(0)}',
-                              Icons.percent_outlined,
-                              Colors.purple,
-                            ),
-                            _buildSummaryCard(
-                              'Net Amount',
-                              'PKR ${_netAmount.toStringAsFixed(0)}',
-                              Icons.account_balance_wallet_outlined,
-                              _netAmount >= 0 ? Colors.green : Colors.red,
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 32),
-
-                        // ── Tabs ───────────────────────────────────────
-                        Container(
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(20),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.04),
-                                blurRadius: 20,
-                                offset: const Offset(0, 10),
-                              ),
-                            ],
-                          ),
-                          child: Column(
-                            children: [
-                              TabBar(
-                                controller: _tabController,
-                                labelColor: AppColors.primary,
-                                unselectedLabelColor: AppColors.textTertiary,
-                                indicatorColor: AppColors.primary,
-                                indicatorSize: TabBarIndicatorSize.tab,
-                                labelStyle: const TextStyle(
-                                    fontWeight: FontWeight.w700),
-                                tabs: const [
-                                  Tab(text: 'Package Sales'),
-                                  Tab(text: 'Subscriptions'),
-                                  Tab(text: 'Refunds'),
+                  child: _isLoading
+                      ? const Center(child: CircularProgressIndicator())
+                      : _error != null
+                          ? _buildErrorState()
+                          : SingleChildScrollView(
+                              padding: const EdgeInsets.all(32),
+                              child: Column(
+                                crossAxisAlignment:
+                                    CrossAxisAlignment.start,
+                                children: [
+                                  // Summary Cards
+                                  GridView.count(
+                                    crossAxisCount: 4,
+                                    shrinkWrap: true,
+                                    physics:
+                                        const NeverScrollableScrollPhysics(),
+                                    crossAxisSpacing: 16,
+                                    mainAxisSpacing: 16,
+                                    childAspectRatio: 1.6,
+                                    children: [
+                                      _buildSummaryCard(
+                                        'Total Earned',
+                                        'PKR ${_totalEarned.toStringAsFixed(0)}',
+                                        Icons.trending_up,
+                                        Colors.green,
+                                      ),
+                                      _buildSummaryCard(
+                                        'Subscriptions Paid',
+                                        'PKR ${_totalSubscriptions.toStringAsFixed(0)}',
+                                        Icons.card_membership_outlined,
+                                        Colors.blue,
+                                      ),
+                                      _buildSummaryCard(
+                                        'Refunded Amount',
+                                        'PKR ${_totalRefunded.toStringAsFixed(0)}',
+                                        Icons.undo_outlined,
+                                        Colors.orange,
+                                      ),
+                                      _buildSummaryCard(
+                                        'Commission Paid',
+                                        'PKR ${_totalCommission.toStringAsFixed(0)}',
+                                        Icons.percent_outlined,
+                                        Colors.purple,
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 32),
+                                  // Tabs
+                                  Container(
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius:
+                                          BorderRadius.circular(20),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black
+                                              .withOpacity(0.04),
+                                          blurRadius: 20,
+                                          offset: const Offset(0, 10),
+                                        ),
+                                      ],
+                                    ),
+                                    child: Column(
+                                      children: [
+                                        TabBar(
+                                          controller: _tabController,
+                                          labelColor: AppColors.primary,
+                                          unselectedLabelColor:
+                                              AppColors.textTertiary,
+                                          indicatorColor: AppColors.primary,
+                                          indicatorSize:
+                                              TabBarIndicatorSize.tab,
+                                          labelStyle: const TextStyle(
+                                              fontWeight: FontWeight.w700),
+                                          tabs: [
+                                            Tab(
+                                                text:
+                                                    'Package Sales (${_earnings.length})'),
+                                            Tab(
+                                                text:
+                                                    'Subscriptions (${_subscriptions.length})'),
+                                            Tab(
+                                                text:
+                                                    'Refunds (${_refunds.length})'),
+                                          ],
+                                        ),
+                                        SizedBox(
+                                          height: 500,
+                                          child: TabBarView(
+                                            controller: _tabController,
+                                            children: [
+                                              _buildEarningsList(),
+                                              _buildSubscriptionsList(),
+                                              _buildRefundsList(),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
                                 ],
                               ),
-                              SizedBox(
-                                height: 500,
-                                child: TabBarView(
-                                  controller: _tabController,
-                                  children: [
-                                    _buildPackageSalesTab(),
-                                    _buildSubscriptionsTab(),
-                                    _buildRefundsTab(),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+                            ),
                 ),
               ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildErrorState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.error_outline, size: 64, color: Colors.red),
+          const SizedBox(height: 16),
+          Text(_error!,
+              style: const TextStyle(color: Colors.red, fontSize: 16),
+              textAlign: TextAlign.center),
+          const SizedBox(height: 24),
+          ElevatedButton.icon(
+            onPressed: _fetchPaymentHistory,
+            icon: const Icon(Icons.refresh, color: Colors.white),
+            label: const Text('Retry',
+                style: TextStyle(color: Colors.white)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
             ),
           ),
         ],
@@ -340,12 +368,10 @@ class _PaymentHistoryScreenState extends State<PaymentHistoryScreen>
           ),
           Text(
             value,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w900,
-              color: color == Colors.red
-                  ? Colors.red
-                  : const Color(0xFF1B1E28),
+              color: Color(0xFF1B1E28),
             ),
           ),
         ],
@@ -353,274 +379,162 @@ class _PaymentHistoryScreenState extends State<PaymentHistoryScreen>
     );
   }
 
-  Widget _buildPackageSalesTab() {
-    return ListView.builder(
-      padding: const EdgeInsets.all(24),
-      itemCount: _packageSales.length,
-      itemBuilder: (context, index) {
-        final sale = _packageSales[index];
-        final bool isPending = sale['status'] == 'Pending';
-        return Container(
-          margin: const EdgeInsets.only(bottom: 12),
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: const Color(0xFFF8F9FA),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: const Color(0xFFEEEEEE)),
+  Widget _buildTransactionRow({
+    required IconData icon,
+    required Color iconColor,
+    required String title,
+    required String subtitle,
+    required String amount,
+    required String status,
+    required Color statusColor,
+  }) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8F9FA),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFEEEEEE)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: iconColor.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(icon, color: iconColor, size: 20),
           ),
-          child: Row(
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 15,
+                    color: Color(0xFF1B1E28),
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  subtitle,
+                  style: const TextStyle(
+                      fontSize: 13, color: Color(0xFF7D848D)),
+                ),
+              ],
+            ),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
             children: [
+              Text(
+                amount,
+                style: TextStyle(
+                  fontWeight: FontWeight.w900,
+                  fontSize: 16,
+                  color: iconColor,
+                ),
+              ),
+              const SizedBox(height: 4),
               Container(
-                padding: const EdgeInsets.all(10),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: Colors.green.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12),
+                  color: statusColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(20),
                 ),
-                child: const Icon(Icons.sell_outlined,
-                    color: Colors.green, size: 20),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      sale['package'],
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 15,
-                        color: Color(0xFF1B1E28),
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      '${sale['customer']} • ${sale['date']}',
-                      style: const TextStyle(
-                        fontSize: 13,
-                        color: Color(0xFF7D848D),
-                      ),
-                    ),
-                  ],
+                child: Text(
+                  status,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: statusColor,
+                  ),
                 ),
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    'PKR ${sale['net']}',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w900,
-                      fontSize: 16,
-                      color: Colors.green,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: isPending
-                          ? Colors.orange.withOpacity(0.1)
-                          : Colors.green.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(
-                      sale['status'],
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: isPending ? Colors.orange : Colors.green,
-                      ),
-                    ),
-                  ),
-                ],
               ),
             ],
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEarningsList() {
+    if (_earnings.isEmpty) {
+      return const Center(
+          child: Text('No package sales yet',
+              style: TextStyle(color: Color(0xFF7D848D))));
+    }
+    return ListView.builder(
+      padding: const EdgeInsets.all(24),
+      itemCount: _earnings.length,
+      itemBuilder: (context, index) {
+        final t = _earnings[index];
+        final isPending = t['payoutStatus'] == 'PENDING';
+        return _buildTransactionRow(
+          icon: Icons.sell_outlined,
+          iconColor: Colors.green,
+          title: _getPackageTitle(t),
+          subtitle:
+              '${_getUserName(t)} • ${_formatDate(t['createdAt'])}',
+          amount: 'PKR ${t['amount'] ?? 0}',
+          status: isPending ? 'Pending' : 'Received',
+          statusColor: isPending ? Colors.orange : Colors.green,
         );
       },
     );
   }
 
-  Widget _buildSubscriptionsTab() {
+  Widget _buildSubscriptionsList() {
+    if (_subscriptions.isEmpty) {
+      return const Center(
+          child: Text('No subscription payments yet',
+              style: TextStyle(color: Color(0xFF7D848D))));
+    }
     return ListView.builder(
       padding: const EdgeInsets.all(24),
-      itemCount: _subscriptionPayments.length,
+      itemCount: _subscriptions.length,
       itemBuilder: (context, index) {
-        final sub = _subscriptionPayments[index];
-        return Container(
-          margin: const EdgeInsets.only(bottom: 12),
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: const Color(0xFFF8F9FA),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: const Color(0xFFEEEEEE)),
-          ),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: Colors.blue.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(Icons.card_membership_outlined,
-                    color: Colors.blue, size: 20),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      sub['plan'],
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 15,
-                        color: Color(0xFF1B1E28),
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      '${sub['method']} • ${sub['date']}',
-                      style: const TextStyle(
-                        fontSize: 13,
-                        color: Color(0xFF7D848D),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    'PKR ${sub['amount']}',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w900,
-                      fontSize: 16,
-                      color: Colors.blue,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: Colors.green.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: const Text(
-                      'Paid',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.green,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
+        final t = _subscriptions[index];
+        final method = t['paymentMethod'] ?? 'N/A';
+        return _buildTransactionRow(
+          icon: Icons.card_membership_outlined,
+          iconColor: Colors.blue,
+          title: 'Subscription Payment',
+          subtitle: '$method • ${_formatDate(t['createdAt'])}',
+          amount: 'PKR ${t['amount'] ?? 0}',
+          status: 'Paid',
+          statusColor: Colors.green,
         );
       },
     );
   }
 
-  Widget _buildRefundsTab() {
+  Widget _buildRefundsList() {
+    if (_refunds.isEmpty) {
+      return const Center(
+          child: Text('No refunds yet',
+              style: TextStyle(color: Color(0xFF7D848D))));
+    }
     return ListView.builder(
       padding: const EdgeInsets.all(24),
       itemCount: _refunds.length,
       itemBuilder: (context, index) {
-        final refund = _refunds[index];
-        final bool isPending = refund['status'] == 'Pending';
-        return Container(
-          margin: const EdgeInsets.only(bottom: 12),
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: const Color(0xFFF8F9FA),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: const Color(0xFFEEEEEE)),
-          ),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: Colors.orange.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(Icons.undo_outlined,
-                    color: Colors.orange, size: 20),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      refund['package'],
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 15,
-                        color: Color(0xFF1B1E28),
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      '${refund['customer']} • ${refund['date']}',
-                      style: const TextStyle(
-                        fontSize: 13,
-                        color: Color(0xFF7D848D),
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      refund['reason'],
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: Color(0xFF7D848D),
-                        fontStyle: FontStyle.italic,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    'PKR ${refund['amount']}',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w900,
-                      fontSize: 16,
-                      color: Colors.orange,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: isPending
-                          ? Colors.orange.withOpacity(0.1)
-                          : Colors.green.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(
-                      refund['status'],
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: isPending ? Colors.orange : Colors.green,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
+        final t = _refunds[index];
+        final isPending = t['payoutStatus'] == 'PENDING';
+        return _buildTransactionRow(
+          icon: Icons.undo_outlined,
+          iconColor: Colors.orange,
+          title: _getPackageTitle(t),
+          subtitle:
+              '${_getUserName(t)} • ${_formatDate(t['createdAt'])}',
+          amount: 'PKR ${t['amount'] ?? 0}',
+          status: isPending ? 'Pending' : 'Processed',
+          statusColor: isPending ? Colors.orange : Colors.green,
         );
       },
     );

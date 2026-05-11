@@ -142,6 +142,7 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
                 onPressed: _isSubmitting ? null : _submitReview,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.blue,
+                  foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -150,7 +151,7 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
                     ? const CircularProgressIndicator(color: Colors.white)
                     : const Text(
                         'SUBMIT REVIEW',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
                       ),
               ),
             ),

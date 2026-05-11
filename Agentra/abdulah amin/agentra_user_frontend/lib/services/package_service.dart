@@ -64,7 +64,7 @@ class PackageService {
         Uri.parse(ApiConfig.BOOKINGS),
         headers: {
           'Content-Type': 'application/json',
-          'x-auth-token': token,
+          'Authorization': 'Bearer $token',
         },
         body: jsonEncode({
           'packageId': packageId,

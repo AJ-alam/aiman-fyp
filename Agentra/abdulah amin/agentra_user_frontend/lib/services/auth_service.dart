@@ -156,7 +156,7 @@ class AuthService {
         Uri.parse(ApiConfig.USER_PROFILE),
         headers: {
           'Content-Type': 'application/json',
-          'x-auth-token': token,
+          'Authorization': 'Bearer $token',
         },
       );
 
@@ -185,7 +185,7 @@ class AuthService {
         Uri.parse(ApiConfig.UPDATE_PROFILE),
         headers: {
           'Content-Type': 'application/json',
-          'x-auth-token': token,
+          'Authorization': 'Bearer $token',
         },
         body: jsonEncode({
           'fullName': fullName,

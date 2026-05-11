@@ -46,8 +46,8 @@ const bookingSchema = new mongoose.Schema({
 
   paymentMethod: {
     type: String,
-    enum: ['CARD', 'JAZZCASH', 'EASYPAISA', 'BANK'],
-    default: 'CARD'
+    enum: ['JAZZCASH', 'BANK'],
+    default: 'JAZZCASH'
   },
 
   // -------- Booking State --------

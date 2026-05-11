@@ -52,6 +52,16 @@ const userSchema = new mongoose.Schema({
     default: 0
   },
 
+  rewardPoints: {
+    type: Number,
+    default: 0
+  },
+
+  bio: {
+    type: String,
+    default: ''
+  },
+
   travelHistory: [{
     packageId: {
       type: mongoose.Schema.Types.ObjectId,

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/bottom_nav_bar.dart';
@@ -20,11 +21,30 @@ class _HomeScreenState extends State<HomeScreen> {
   List<Package> _packages = [];
   User? _user;
   bool _isLoading = true;
+  Timer? _refreshTimer;
 
   @override
   void initState() {
     super.initState();
     _loadData();
+    // Auto-refresh packages every 30 seconds for real-time sync
+    _refreshTimer = Timer.periodic(const Duration(seconds: 30), (_) {
+      if (mounted) _refreshPackages();
+    });
+  }
+
+  @override
+  void dispose() {
+    _refreshTimer?.cancel();
+    super.dispose();
+  }
+
+  /// Silently refresh packages without showing loading spinner
+  Future<void> _refreshPackages() async {
+    final packages = await PackageService.getPackages();
+    if (mounted) {
+      setState(() => _packages = packages);
+    }
   }
 
   Future<void> _loadData() async {

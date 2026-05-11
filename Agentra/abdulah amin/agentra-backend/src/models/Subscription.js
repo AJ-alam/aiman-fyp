@@ -32,7 +32,7 @@ const subscriptionSchema = new mongoose.Schema({
 
   paymentMethod: {
     type: String,
-    enum: ['CARD', 'JAZZCASH', 'EASYPAISA', 'BANK'],
+    enum: ['JAZZCASH', 'BANK'],
     required: true
   },
 

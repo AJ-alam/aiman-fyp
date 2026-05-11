@@ -52,7 +52,7 @@ exports.createBooking = async (req, res) => {
     });
 
     await Package.findByIdAndUpdate(packageId, { $inc: { availableSeats: -seats } });
-    await User.findByIdAndUpdate(req.user.id, { $inc: { totalBookings: 1 } });
+    await User.findByIdAndUpdate(req.user.id, { $inc: { totalBookings: 1, rewardPoints: 10 } });
 
     res.status(201).json({ success: true, booking });
   } catch (error) {
@@ -99,8 +99,17 @@ exports.cancelBooking = async (req, res) => {
 
 // ---------- AGENT BOOKINGS ----------
 exports.getAgentBookings = async (req, res) => {
-  const bookings = await Booking.find({ agentId: req.user.id }).populate('userId packageId');
-  res.json({ success: true, bookings });
+  try {
+    // Exclude completed bookings and bookings whose travel date has already passed
+    const bookings = await Booking.find({
+      agentId: req.user.id,
+      status: { $ne: 'COMPLETED' },
+      travelDate: { $gte: new Date() }
+    }).populate('userId packageId').sort({ createdAt: -1 });
+    res.json({ success: true, bookings });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
 };
 
 // ---------- OWNER BOOKINGS ----------

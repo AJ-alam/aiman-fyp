@@ -30,6 +30,8 @@ class ApiConfig {
   static const String USER_PROFILE = '$BASE_URL/users/profile';
   static const String UPDATE_PROFILE = '$BASE_URL/users/profile';
   static const String USER_PREFERENCES = '$BASE_URL/users/preferences';
+  static const String USER_REWARDS = '$BASE_URL/users/rewards';
+  static const String USER_COMPLETED_TRIPS = '$BASE_URL/users/completed-trips';
   
   // ===== PAYMENT ENDPOINTS =====
   static const String PAYMENT_METHODS = '$BASE_URL/payments/methods';
@@ -57,6 +59,10 @@ class ApiConfig {
   static const String SAVED_PACKAGES = '$BASE_URL/saved';
   static String savedPackage(String id) => '$BASE_URL/saved/$id';
   
+  // ===== REFUND ENDPOINTS =====
+  static const String MY_REFUNDS = '$BASE_URL/refund/my';
+  static const String REQUEST_REFUND = '$BASE_URL/refund/request';
+
   // ===== AGENT ENDPOINTS (BONUS) =====
   static const String AGENT_DASHBOARD = '$BASE_URL/dashboard/agent';
   static const String AGENT_ANALYTICS = '$BASE_URL/analytics/agent';

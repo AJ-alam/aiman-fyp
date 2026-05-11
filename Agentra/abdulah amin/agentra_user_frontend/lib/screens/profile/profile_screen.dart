@@ -1,12 +1,17 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import '../../config/api_config.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/bottom_nav_bar.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/side_drawer.dart';
 import '../../services/auth_service.dart';
 import '../../services/booking_service.dart';
+import '../../services/saved_packages_service.dart';
 import '../../models/user.dart';
 import '../../models/booking.dart';
+import '../../models/package.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -19,6 +24,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   int _currentIndex = 4;
   User? _user;
   List<Booking> _completedBookings = [];
+  List<Package> _savedPackages = [];
+  int _rewardPoints = 0;
   bool _isLoading = true;
 
   @override
@@ -33,13 +40,63 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final user = await AuthService.getCurrentUser();
     final bookings = await BookingService.getMyBookings();
     
+    // Fetch reward points from API
+    int rewardPoints = 0;
+    try {
+      final token = await AuthService.getToken();
+      if (token != null) {
+        final response = await http.get(
+          Uri.parse(ApiConfig.USER_REWARDS),
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token',
+          },
+        );
+        if (response.statusCode == 200) {
+          final data = jsonDecode(response.body);
+          rewardPoints = data['rewardPoints'] ?? 0;
+        }
+      }
+    } catch (e) {
+      print('Error fetching reward points: $e');
+    }
+    
+    // Fetch completed trips from API
+    List<Booking> completedTrips = [];
+    try {
+      final token = await AuthService.getToken();
+      if (token != null) {
+        final response = await http.get(
+          Uri.parse(ApiConfig.USER_COMPLETED_TRIPS),
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token',
+          },
+        );
+        if (response.statusCode == 200) {
+          final data = jsonDecode(response.body);
+          final List raw = data['completedTrips'] ?? [];
+          completedTrips = raw.map((b) => Booking.fromJson(b)).toList();
+        }
+      }
+    } catch (e) {
+      print('Error fetching completed trips: $e');
+    }
+    
+    // Fetch saved packages
+    List<Package> savedPackages = [];
+    try {
+      savedPackages = await SavedPackagesService.getSavedPackages();
+    } catch (e) {
+      print('Error fetching saved packages: $e');
+    }
+    
     if (mounted) {
       setState(() {
         _user = user;
-        // Filter for completed or at least confirmed bookings to show as "trips"
-        _completedBookings = bookings.where((b) => 
-          b.status.toLowerCase() == 'completed' || b.status.toLowerCase() == 'confirmed'
-        ).toList();
+        _completedBookings = completedTrips;
+        _rewardPoints = rewardPoints;
+        _savedPackages = savedPackages;
         _isLoading = false;
       });
     }
@@ -114,19 +171,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
-                        _buildStatItem('Reward\nPoints', '${_completedBookings.length * 100}'),
+                        _buildStatItem('Reward\nPoints', '$_rewardPoints'),
                         Container(
                           width: 1,
                           height: 40,
                           color: AppColors.border,
                         ),
-                        _buildStatItem('Travel\nTrips', '${_completedBookings.length}'),
+                        _buildStatItem('Completed\nTrips', '${_completedBookings.length}'),
                         Container(
                           width: 1,
                           height: 40,
                           color: AppColors.border,
                         ),
-                        _buildStatItem('Favourites', '0'),
+                        _buildStatItem('Saved\nPackages', '${_savedPackages.length}'),
                       ],
                     ),
                   ),
@@ -159,6 +216,38 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           itemCount: _completedBookings.length,
                           itemBuilder: (context, index) {
                             return _buildTripCard(_completedBookings[index]);
+                          },
+                        ),
+                      ),
+                  const SizedBox(height: 24),
+                  // Saved Packages Section
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        'Saved Packages',
+                        style: AppTextStyles.headingSmall,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  _savedPackages.isEmpty
+                    ? Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                        child: Text(
+                          'No saved packages yet.',
+                          style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textTertiary),
+                        ),
+                      )
+                    : SizedBox(
+                        height: 180,
+                        child: ListView.builder(
+                          scrollDirection: Axis.horizontal,
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          itemCount: _savedPackages.length,
+                          itemBuilder: (context, index) {
+                            return _buildSavedPackageCard(_savedPackages[index]);
                           },
                         ),
                       ),
@@ -287,6 +376,77 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSavedPackageCard(Package package) {
+    final imageUrl = (package.images != null && package.images!.isNotEmpty)
+        ? package.images!.first
+        : (package.image ?? '');
+    return Container(
+      width: 140,
+      margin: const EdgeInsets.only(right: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(AppDimensions.radius),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            height: 100,
+            decoration: BoxDecoration(
+              color: AppColors.backgroundLight,
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(12),
+              ),
+              image: imageUrl.isNotEmpty
+                  ? DecorationImage(
+                      image: NetworkImage(imageUrl),
+                      fit: BoxFit.cover,
+                    )
+                  : null,
+            ),
+            child: imageUrl.isEmpty
+                ? const Center(
+                    child: Icon(Icons.landscape_outlined,
+                        color: AppColors.textTertiary, size: 40),
+                  )
+                : null,
+          ),
+          Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  package.title,
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'PKR ${package.price}',
+                  style: AppTextStyles.bodySmall.copyWith(
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ],
             ),

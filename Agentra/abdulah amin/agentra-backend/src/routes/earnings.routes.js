@@ -11,5 +11,6 @@ router.get('/by-package', protect, role('AGENT'), earningsController.getEarnings
 router.get('/payouts', protect, role('AGENT'), earningsController.getPayoutHistory);
 router.post('/request-payout', protect, role('AGENT'), earningsController.requestPayout);
 router.get('/report', protect, role('AGENT'), earningsController.getEarningsReport);
+router.get('/transactions', protect, role('AGENT'), earningsController.getTransactions);
 
 module.exports = router;

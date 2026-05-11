@@ -252,13 +252,18 @@ exports.getMyRefundRequests = async (req, res) => {
     const userId = req.user.id;
     const { status } = req.query;
 
-    let query = { userId, refundStatus: { $ne: 'NONE' } };
+    // Only show cancelled bookings with a refund status
+    let query = {
+      userId,
+      status: 'CANCELLED',
+      refundStatus: { $ne: 'NONE' }
+    };
     if (status) {
       query.refundStatus = status;
     }
 
     const bookings = await Booking.find(query)
-      .populate('packageId', 'title location price')
+      .populate('packageId', 'title location price images image')
       .populate('agentId', 'fullName businessName')
       .sort({ createdAt: -1 });
 

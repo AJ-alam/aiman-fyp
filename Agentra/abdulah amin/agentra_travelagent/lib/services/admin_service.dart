@@ -141,7 +141,7 @@ static Future<Map<String, dynamic>> getOwnerDashboard() async {
         return false;
       }
 
-      final url = ApiConfig.rejectAgent(id);
+      final url = ApiConfig.rejectAgentAdmin(id);
       print('  URL: $url');
 
       final response = await http.delete(

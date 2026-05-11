@@ -52,7 +52,7 @@ const transactionSchema = new mongoose.Schema({
 
   paymentMethod: {
     type: String,
-    enum: ['CARD', 'JAZZCASH', 'EASYPAISA', 'BANK', 'WALLET']
+    enum: ['JAZZCASH', 'BANK', 'WALLET']
   },
 
   paymentDetails: {

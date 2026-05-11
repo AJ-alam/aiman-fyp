@@ -63,9 +63,10 @@ class _SearchScreenState extends State<SearchScreen> {
                         child: TextField(
                           controller: _searchController,
                           style: AppTextStyles.bodyMedium,
+                          textInputAction: TextInputAction.search,
                           onSubmitted: (value) {
-                            if (value.isNotEmpty) {
-                              Navigator.pushNamed(context, '/search-results', arguments: value);
+                            if (value.trim().isNotEmpty) {
+                              Navigator.pushNamed(context, '/search-results', arguments: value.trim());
                             }
                           },
                           decoration: InputDecoration(

@@ -16,7 +16,7 @@ class BookingService {
         Uri.parse(ApiConfig.MY_BOOKINGS),
         headers: {
           'Content-Type': 'application/json',
-          'x-auth-token': token,
+          'Authorization': 'Bearer $token',
         },
       );
 
@@ -55,7 +55,7 @@ class BookingService {
         Uri.parse(ApiConfig.BOOKINGS),
         headers: {
           'Content-Type': 'application/json',
-          'x-auth-token': token,
+          'Authorization': 'Bearer $token',
         },
         body: jsonEncode({
           'packageId': packageId,
@@ -106,7 +106,7 @@ class BookingService {
         Uri.parse('${ApiConfig.BOOKINGS}/$bookingId/cancel'),
         headers: {
           'Content-Type': 'application/json',
-          'x-auth-token': token,
+          'Authorization': 'Bearer $token',
         },
       );
 

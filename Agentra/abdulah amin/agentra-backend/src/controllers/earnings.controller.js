@@ -338,3 +338,40 @@ exports.getEarningsReport = async (req, res) => {
     });
   }
 };
+
+// GET /api/earnings/transactions — all transactions for the logged-in agent
+exports.getTransactions = async (req, res) => {
+  try {
+    const agentId = req.user.id;
+    const { type, limit = 50, skip = 0 } = req.query;
+
+    const query = { agentId };
+    if (type) query.type = type;
+
+    const transactions = await Transaction.find(query)
+      .populate('packageId', 'title location price')
+      .populate('bookingId', 'status travelDate')
+      .populate('userId', 'fullName email')
+      .sort({ createdAt: -1 })
+      .limit(parseInt(limit))
+      .skip(parseInt(skip));
+
+    const total = await Transaction.countDocuments(query);
+
+    res.json({
+      success: true,
+      transactions,
+      pagination: {
+        total,
+        limit: parseInt(limit),
+        skip: parseInt(skip),
+        hasMore: total > parseInt(skip) + parseInt(limit)
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};

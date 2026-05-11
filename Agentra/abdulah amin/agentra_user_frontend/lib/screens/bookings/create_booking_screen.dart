@@ -255,6 +255,7 @@ class _CreateBookingScreenState extends State<CreateBookingScreen> {
                     : _createBooking,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.blue,
+                  foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -265,7 +266,7 @@ class _CreateBookingScreenState extends State<CreateBookingScreen> {
                         widget.package.availableSeats == 0 
                             ? 'FULLY BOOKED' 
                             : 'CONFIRM BOOKING',
-                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
                       ),
               ),
             ),
