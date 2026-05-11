@@ -107,10 +107,10 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(color: const Color(0xFFEEEEEE)),
                 ),
-                child: const Row(
+                child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Column(
+                    const Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text('Revenue',
@@ -125,12 +125,14 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        Text('RS ${agent['revenue'] ?? '0'}',
-                            style: const TextStyle(
-                                fontWeight: FontWeight.w900,
-                                fontSize: 20,
-                                color: Color(0xFF1B1E28))),
-                        Text('2023 - 2025',
+                        Text(
+                          'RS ${agent['revenue'] ?? '0'}',
+                          style: const TextStyle(
+                              fontWeight: FontWeight.w900,
+                              fontSize: 20,
+                              color: Color(0xFF1B1E28)),
+                        ),
+                        const Text('2023 - 2025',
                             style: TextStyle(
                                 color: Color(0xFF7D848D), fontSize: 13)),
                       ],

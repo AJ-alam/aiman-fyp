@@ -26,16 +26,17 @@ class ApiConfig {
   // ===== ADMIN / OWNER ENDPOINTS =====
   static const String OWNER_LOGIN = '$BASE_URL/auth/owner/login';
   static const String OWNER_DASHBOARD = '$BASE_URL/dashboard/owner';
-  
+  static const String ALL_AGENTS = '$BASE_URL/admin/agents';
+
   // New Approval Workflow Routes
   static const String PENDING_AGENTS = '$BASE_URL/auth/admin/agents/pending';
   static String approveAgent(String id) => '$BASE_URL/auth/admin/agents/$id/approve';
   static String rejectAgent(String id) => '$BASE_URL/auth/admin/agents/$id/reject';
-  
+
   // Legacy / Other Admin Routes
   static const String COMPLAINTS = '$BASE_URL/complaints';
   static String updateComplaint(String id) => '$BASE_URL/complaints/$id';
-  
+
   static const String UPLOAD_IMAGE = '$BASE_URL/upload/image';
 }
 
