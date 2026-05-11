@@ -50,7 +50,15 @@ class _OwnerComplaintsScreenState extends State<OwnerComplaintsScreen> {
 
   void _showDetailDialog(Map<String, dynamic> complaint) {
     final TextEditingController responseController =
-        TextEditingController(text: complaint['response']);
+        TextEditingController(text: complaint['adminResponse'] ?? complaint['ownerResponse'] ?? '');
+
+    final fromUser = complaint['userId'];
+    final fromAgent = complaint['agentId'];
+    final senderName = fromUser?['fullName'] ?? fromAgent?['fullName'] ?? 'Unknown';
+    final senderEmail = fromUser?['email'] ?? fromAgent?['email'] ?? 'N/A';
+    final dateStr = complaint['createdAt'] != null 
+        ? DateTime.parse(complaint['createdAt']).toString().split(' ')[0]
+        : 'N/A';
 
     showDialog(
       context: context,
@@ -89,11 +97,10 @@ class _OwnerComplaintsScreenState extends State<OwnerComplaintsScreen> {
               const Divider(),
               const SizedBox(height: 16),
               // From
-              _buildDetailRow('From',
-                  '${complaint['from']} (${complaint['role']})'),
-              _buildDetailRow('Email', complaint['email']),
-              _buildDetailRow('Date', complaint['date']),
-              _buildDetailRow('Subject', complaint['subject']),
+              _buildDetailRow('From', senderName),
+              _buildDetailRow('Email', senderEmail),
+              _buildDetailRow('Date', dateStr),
+              _buildDetailRow('Subject', complaint['subject'] ?? 'No Subject'),
               const SizedBox(height: 12),
               // Description
               const Text('Description',
@@ -109,7 +116,7 @@ class _OwnerComplaintsScreenState extends State<OwnerComplaintsScreen> {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
-                  complaint['description'],
+                  complaint['description'] ?? 'No description provided.',
                   style: const TextStyle(
                       fontSize: 14,
                       color: Color(0xFF4A4A4A),
@@ -385,7 +392,12 @@ class _OwnerComplaintsScreenState extends State<OwnerComplaintsScreen> {
                                       ),
                                       const SizedBox(width: 8),
                                       Text(
-                                        complaint['date'],
+                                        complaint['createdAt'] != null
+                                            ? DateTime.parse(
+                                                    complaint['createdAt'])
+                                                .toString()
+                                                .split(' ')[0]
+                                            : 'N/A',
                                         style: const TextStyle(
                                           fontSize: 12,
                                           color: Color(0xFF7D848D),

@@ -148,6 +148,13 @@ const loginAgent = async (req, res) => {
       });
     }
 
+    if (agent.status === 'BLOCKED') {
+      return res.status(403).json({
+        success: false,
+        message: 'Your account has been blocked by admin. Please contact support.',
+      });
+    }
+
     const token = generateToken(agent._id, agent.role);
 
     const { password: _, ...agentData } = agent.toObject();
