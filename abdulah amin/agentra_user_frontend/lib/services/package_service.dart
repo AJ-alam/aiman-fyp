@@ -80,4 +80,17 @@ class PackageService {
       return false;
     }
   }
+
+  static Future<List<String>> getLocations() async {
+    try {
+      final response = await http.get(Uri.parse(ApiConfig.PACKAGE_LOCATIONS));
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return List<String>.from(data['locations'] ?? []);
+      }
+    } catch (e) {
+      print('🔴 Get locations error: $e');
+    }
+    return [];
+  }
 }

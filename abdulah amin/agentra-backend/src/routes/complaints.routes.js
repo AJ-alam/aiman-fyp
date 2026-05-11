@@ -12,6 +12,9 @@ router.get('/', protect, role('OWNER'), complaintsController.getAllComplaints);
 // =============== UPDATE COMPLAINT STATUS (OWNER) ===============
 router.put('/:id', protect, role('OWNER'), complaintsController.updateComplaintStatus);
 
+// =============== AGENT FETCHES COMPLAINTS RECEIVED FROM USERS ===============
+router.get('/agent-received', protect, role('AGENT'), complaintsController.getAgentComplaints);
+
 // =============== AGENT SUBMITS COMPLAINT TO ADMIN ===============
 router.post('/agent', protect, role('AGENT'), async (req, res) => {
   try {

@@ -87,7 +87,7 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
                               duration: package.duration,
                               price: 'PKR ${package.price}',
                               description: package.description,
-                              rating: package.rating ?? 4.5,
+                              rating: package.rating ?? 0.0,
                               showSaleBadge: package.hasDiscount == true &&
                                   (package.discountPercentage ?? 0) > 0,
                               discountPercentage:

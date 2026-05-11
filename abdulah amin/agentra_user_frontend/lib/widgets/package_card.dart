@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../theme/app_theme.dart';
 import '../models/package.dart';
 import '../services/saved_packages_service.dart';
+import '../config/api_config.dart';
 
 class PackageCard extends StatefulWidget {
   final String imageUrl;
@@ -88,23 +90,27 @@ class _PackageCardState extends State<PackageCard> {
                     topLeft: Radius.circular(12),
                     bottomLeft: Radius.circular(12),
                   ),
-                  child: Image.network(
-                    widget.imageUrl,
+                  child: CachedNetworkImage(
+                    imageUrl: ApiConfig.getImageUrl(widget.imageUrl),
                     width: 100,
                     height: 100,
                     fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Container(
-                        width: 100,
-                        height: 100,
-                        color: AppColors.backgroundGray,
-                        child: const Icon(Icons.broken_image_outlined,
-                            color: AppColors.textTertiary),
-                      );
-                    },
+                    placeholder: (context, url) => Container(
+                      width: 100,
+                      height: 100,
+                      color: AppColors.backgroundGray,
+                      child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+                    ),
+                    errorWidget: (context, url, error) => Container(
+                      width: 100,
+                      height: 100,
+                      color: AppColors.backgroundGray,
+                      child: const Icon(Icons.broken_image_outlined,
+                          color: AppColors.textTertiary),
+                    ),
                   ),
                 ),
-                if (widget.showSaleBadge)
+                if (widget.showSaleBadge && widget.discountPercentage > 0)
                   Positioned(
                     top: 8,
                     left: 8,

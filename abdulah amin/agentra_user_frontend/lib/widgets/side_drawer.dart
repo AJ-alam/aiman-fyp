@@ -138,6 +138,7 @@ class _SideDrawerState extends State<SideDrawer> {
             () async {
               await AuthService.logout();
               if (context.mounted) {
+                Navigator.pop(context); // Close drawer
                 Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
               }
             },

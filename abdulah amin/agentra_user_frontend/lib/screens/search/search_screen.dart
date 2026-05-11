@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/custom_button.dart';
+import '../../services/package_service.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
@@ -12,11 +13,29 @@ class SearchScreen extends StatefulWidget {
 class _SearchScreenState extends State<SearchScreen> {
   final TextEditingController _searchController = TextEditingController();
   bool _showFilter = false;
+  bool _isLoadingLocations = true;
+  List<String> _locations = [];
   
   // Filter states
   final Set<String> _selectedPrices = {};
   final Set<String> _selectedLocations = {};
   final Set<String> _selectedDurations = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _loadLocations();
+  }
+
+  Future<void> _loadLocations() async {
+    final locs = await PackageService.getLocations();
+    if (mounted) {
+      setState(() {
+        _locations = locs;
+        _isLoadingLocations = false;
+      });
+    }
+  }
 
   @override
   void dispose() {
@@ -109,20 +128,23 @@ class _SearchScreenState extends State<SearchScreen> {
               ),
               // Search Places Grid
               Expanded(
-                child: GridView.builder(
-                  padding: const EdgeInsets.all(16),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    crossAxisSpacing: 16,
-                    mainAxisSpacing: 16,
-                    childAspectRatio: 1.2,
-                  ),
-                  itemCount: 6,
-                  itemBuilder: (context, index) {
-                    final places = ['Murree', 'Nathia Gali', 'Lahore', 'Karachi', 'Hunza', 'Skardu'];
-                    return _buildPlaceCard(places[index]);
-                  },
-                ),
+                child: _isLoadingLocations
+                    ? const Center(child: CircularProgressIndicator())
+                    : _locations.isEmpty
+                        ? const Center(child: Text('No locations available.'))
+                        : GridView.builder(
+                            padding: const EdgeInsets.all(16),
+                            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 2,
+                              crossAxisSpacing: 16,
+                              mainAxisSpacing: 16,
+                              childAspectRatio: 1.2,
+                            ),
+                            itemCount: _locations.length,
+                            itemBuilder: (context, index) {
+                              return _buildPlaceCard(_locations[index], index);
+                            },
+                          ),
               ),
             ],
           ),
@@ -222,7 +244,18 @@ class _SearchScreenState extends State<SearchScreen> {
     );
   }
 
-  Widget _buildPlaceCard(String place) {
+  Widget _buildPlaceCard(String place, int index) {
+    // Variety of travel-related images for the grid
+    final images = [
+      'https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=500',
+      'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=500',
+      'https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=500',
+      'https://images.unsplash.com/photo-1472214103451-9374bd1c798e?w=500',
+      'https://images.unsplash.com/photo-1433086566085-52f0b8982a84?w=500',
+      'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=500',
+    ];
+    final imageUrl = images[index % images.length];
+
     return GestureDetector(
       onTap: () {
         Navigator.pushNamed(context, '/search-results', arguments: place);
@@ -230,8 +263,8 @@ class _SearchScreenState extends State<SearchScreen> {
       child: Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(AppDimensions.radius),
-          image: const DecorationImage(
-            image: NetworkImage('https://via.placeholder.com/200'),
+          image: DecorationImage(
+            image: NetworkImage(imageUrl),
             fit: BoxFit.cover,
           ),
         ),

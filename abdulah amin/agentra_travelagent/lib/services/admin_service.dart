@@ -112,7 +112,7 @@ static Future<Map<String, dynamic>> getOwnerDashboard() async {
       final token = prefs.getString('token');
       if (token == null) return false;
 
-      final response = await http.put(
+      final response = await http.patch(
         Uri.parse(ApiConfig.approveAgent(id)),
         headers: {
           'Content-Type': 'application/json',
@@ -137,7 +137,7 @@ static Future<Map<String, dynamic>> getOwnerDashboard() async {
       
       if (token == null) return false;
 
-      final response = await http.put(
+      final response = await http.patch(
         Uri.parse(ApiConfig.rejectAgent(id)),
         headers: {
           'Content-Type': 'application/json',
@@ -162,7 +162,7 @@ static Future<Map<String, dynamic>> getOwnerDashboard() async {
       final token = prefs.getString('token');
       if (token == null) return false;
 
-      final response = await http.put(
+      final response = await http.patch(
         Uri.parse(ApiConfig.rejectAgent(agentId)),
         headers: {
           'Content-Type': 'application/json',

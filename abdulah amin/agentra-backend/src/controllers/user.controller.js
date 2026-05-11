@@ -1,5 +1,6 @@
 const Booking = require('../models/Booking');
 const Review = require('../models/Review');
+const Transaction = require('../models/Transaction');
 const Complaint = require('../models/Complaint');
 const Package = require('../models/Package');
 const User = require('../models/User');
@@ -54,12 +55,31 @@ exports.createBooking = async (req, res) => {
       paymentStatus: 'PAID',
     });
 
+    // Create a transaction record for payment history
+    await Transaction.create({
+      agentId: pkg.agentId,
+      bookingId: booking._id,
+      packageId: packageId,
+      userId: req.user.id,
+      type: 'EARNING',
+      amount: totalAmount,
+      paymentMethod,
+      payoutStatus: 'PENDING',
+      notes: `Booking for ${pkg.title}`
+    });
+
     await Package.findByIdAndUpdate(packageId, { $inc: { availableSeats: -seats } });
-    await User.findByIdAndUpdate(req.user.id, { $inc: { totalBookings: 1 } });
+    await User.findByIdAndUpdate(req.user.id, { 
+      $inc: { 
+        totalBookings: 1,
+        rewardPoints: 100 // Reward 100 points per booking
+      } 
+    });
 
     res.status(201).json({ success: true, booking });
 
   } catch (err) {
+    console.error('🔴 Create booking error:', err);
     res.status(500).json({ success: false, message: err.message });
   }
 };
@@ -155,6 +175,35 @@ exports.updatePreferences = async (req, res) => {
     { new: true }
   );
   res.json({ success: true, preferences: updated.preferences });
+};
+
+// ================= FAVORITES =================
+exports.toggleFavorite = async (req, res) => {
+  try {
+    const { packageId } = req.body;
+    const user = await User.findById(req.user.id);
+    
+    const isFavorite = user.favorites.includes(packageId);
+    if (isFavorite) {
+      user.favorites.pull(packageId);
+    } else {
+      user.favorites.push(packageId);
+    }
+    
+    await user.save();
+    res.json({ success: true, isFavorite: !isFavorite });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+exports.getFavorites = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).populate('favorites');
+    res.json({ success: true, favorites: user.favorites });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
 };
 
 // ================= ACCOUNT =================

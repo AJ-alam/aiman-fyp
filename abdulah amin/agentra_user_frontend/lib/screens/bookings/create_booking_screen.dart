@@ -16,10 +16,10 @@ class _CreateBookingScreenState extends State<CreateBookingScreen> {
   final _formKey = GlobalKey<FormState>();
   int _seats = 1;
   DateTime _selectedDate = DateTime.now().add(const Duration(days: 7));
-  String _paymentMethod = 'CARD';
+  String _paymentMethod = 'JAZZCASH';
   bool _isLoading = false;
 
-  final List<String> _paymentMethods = ['CARD', 'JAZZCASH', 'EASYPAISA', 'BANK'];
+
 
   Future<void> _selectDate() async {
     final DateTime? picked = await showDatePicker(
@@ -209,20 +209,10 @@ class _CreateBookingScreenState extends State<CreateBookingScreen> {
             ),
             const SizedBox(height: 24),
 
-            // Payment Method
             const Text(
-              'Payment Method',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              'Payment Method: JazzCash',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.blue),
             ),
-            const SizedBox(height: 8),
-            ...(_paymentMethods.map((method) {
-              return RadioListTile<String>(
-                title: Text(method),
-                value: method,
-                groupValue: _paymentMethod,
-                onChanged: (value) => setState(() => _paymentMethod = value!),
-              );
-            }).toList()),
             const SizedBox(height: 24),
 
             // Total Price

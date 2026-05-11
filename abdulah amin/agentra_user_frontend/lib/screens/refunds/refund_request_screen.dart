@@ -46,7 +46,7 @@ class _RefundRequestScreenState extends State<RefundRequestScreen> {
         _bookings = bookings
             .where((b) =>
                 b.paymentStatus == 'PAID' &&
-                b.status.toLowerCase() != 'cancelled')
+                b.status.toLowerCase() == 'cancelled')
             .toList();
         _isLoadingBookings = false;
       });

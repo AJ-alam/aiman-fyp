@@ -19,7 +19,7 @@ class ApiConfig {
   static const String UPDATE_AGENT_PROFILE = '$BASE_URL/auth/agent/profile';
   static const String AGENT_DASHBOARD = '$BASE_URL/dashboard/agent';
   static const String AGENT_PERFORMANCE = '$BASE_URL/dashboard/agent';
-  static const String AGENT_COMPLAINTS = '$BASE_URL/agents/complaints';
+  static const String AGENT_COMPLAINTS = '$BASE_URL/complaints/agent-received';
   static const String AGENT_BOOKINGS = '$BASE_URL/agents/bookings';
   static const String AGENT_REFUNDS = '$BASE_URL/refund/agent';
 
@@ -30,8 +30,8 @@ class ApiConfig {
 
   // New Approval Workflow Routes
   static const String PENDING_AGENTS = '$BASE_URL/auth/admin/agents/pending';
-  static String approveAgent(String id) => '$BASE_URL/auth/admin/agents/$id/approve';
-  static String rejectAgent(String id) => '$BASE_URL/auth/admin/agents/$id/reject';
+  static String approveAgent(String id) => '$BASE_URL/admin/travel-agents/$id/approve';
+  static String rejectAgent(String id) => '$BASE_URL/admin/travel-agents/$id/reject';
 
   // Legacy / Other Admin Routes
   static const String COMPLAINTS = '$BASE_URL/complaints';

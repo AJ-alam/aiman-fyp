@@ -4,18 +4,22 @@ class User {
   final String fullName;
   final String email;
   final String? phone;
-  final String? bio;
   final String? profileImage;
   final String role;
+  final int totalBookings;
+  final int rewardPoints;
+  final int favoritesCount;
 
   User({
     required this.id,
     required this.fullName,
     required this.email,
     this.phone,
-    this.bio,
     this.profileImage,
     this.role = 'user',
+    this.totalBookings = 0,
+    this.rewardPoints = 0,
+    this.favoritesCount = 0,
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
@@ -24,9 +28,11 @@ class User {
       fullName: json['fullName'] ?? '',
       email: json['email'] ?? '',
       phone: json['phone'],
-      bio: json['bio'],
       profileImage: ApiConfig.getImageUrl(json['profileImage']),
       role: json['role'] ?? 'user',
+      totalBookings: json['totalBookings'] ?? 0,
+      rewardPoints: json['rewardPoints'] ?? 0,
+      favoritesCount: (json['favorites'] as List?)?.length ?? 0,
     );
   }
 
@@ -36,7 +42,6 @@ class User {
       'fullName': fullName,
       'email': email,
       'phone': phone,
-      'bio': bio,
       'profileImage': profileImage,
       'role': role,
     };

@@ -110,6 +110,32 @@ class _OwnerManageAccountsScreenState
     );
   }
 
+  Future<void> _verifyAgent(String id, String name) async {
+    final success = await AdminService.verifyAgent(id);
+    if (success && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('$name has been approved!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+      _loadAgents();
+    }
+  }
+
+  Future<void> _rejectAgent(String id, String name) async {
+    final success = await AdminService.rejectAgent(id);
+    if (success && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('$name has been rejected'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      _loadAgents();
+    }
+  }
+
   void _showNoticeSentDialog(String name, String action) {
     showDialog(
       context: context,
@@ -435,53 +461,26 @@ class _OwnerManageAccountsScreenState
               ),
               const SizedBox(width: 12),
               // Action buttons
-              if (!isDeleted) ...[
-                if (status == 'BLOCKED')
-                  ElevatedButton(
-                    onPressed: () => _unblockAgent(agent['_id']),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green,
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 10),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                    child: const Text('Unblock',
-                        style: TextStyle(
-                            color: Colors.white, fontSize: 13)),
-                  )
-                else if (status != 'notice_sent') ...[
-                  ElevatedButton(
-                    onPressed: () => _showDeleteDialog(agent),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red,
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 10),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                    child: const Text('Delete',
-                        style: TextStyle(
-                            color: Colors.white, fontSize: 13)),
+              if (status == 'PENDING_APPROVAL') ...[
+                ElevatedButton(
+                  onPressed: () => _verifyAgent(agent['_id'], agent['fullName'] ?? 'Agent'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green,
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                   ),
-                  const SizedBox(width: 8),
-                  ElevatedButton(
-                    onPressed: () => _showBlockDialog(agent),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 10),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                    child: const Text('Block',
-                        style: TextStyle(
-                            color: Colors.white, fontSize: 13)),
+                  child: const Text('Approve', style: TextStyle(color: Colors.white, fontSize: 13)),
+                ),
+                const SizedBox(width: 8),
+                ElevatedButton(
+                  onPressed: () => _rejectAgent(agent['_id'], agent['fullName'] ?? 'Agent'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red,
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                   ),
-                ],
+                  child: const Text('Reject', style: TextStyle(color: Colors.white, fontSize: 13)),
+                ),
               ],
             ],
           ),

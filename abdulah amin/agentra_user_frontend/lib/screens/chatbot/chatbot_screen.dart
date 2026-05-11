@@ -18,15 +18,15 @@ class ChatPackage {
   final int availableSeats;
 
   ChatPackage.fromJson(Map<String, dynamic> json)
-      : id = json['_id'] ?? '',
-        title = json['title'] ?? '',
-        location = json['location'] ?? '',
-        price = (json['price'] ?? 0).toInt(),
-        duration = json['duration'] ?? '',
-        isFeatured = json['isFeatured'] ?? false,
-        hasDiscount = json['hasDiscount'] ?? false,
-        discountPercentage = (json['discountPercentage'] ?? 0).toInt(),
-        availableSeats = (json['availableSeats'] ?? 0).toInt();
+      : id = json['_id']?.toString() ?? '',
+        title = json['title']?.toString() ?? '',
+        location = json['location']?.toString() ?? '',
+        price = int.tryParse(json['price']?.toString() ?? '0') ?? 0,
+        duration = json['duration']?.toString() ?? '',
+        isFeatured = json['isFeatured'] == true,
+        hasDiscount = json['hasDiscount'] == true,
+        discountPercentage = int.tryParse(json['discountPercentage']?.toString() ?? '0') ?? 0,
+        availableSeats = int.tryParse(json['availableSeats']?.toString() ?? '0') ?? 0;
 }
 
 // ─── Chat Message with Packages ──────────────────────────────────────────────
@@ -120,6 +120,16 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
             packages: (result['packages'] as List<dynamic>? ?? [])
                 .map((p) => ChatPackage.fromJson(p as Map<String, dynamic>))
                 .toList(),
+          ));
+        } else {
+          _messages.add(ChatMessageWithPackages(
+            message: ChatMessage(
+              id: DateTime.now().millisecondsSinceEpoch.toString(),
+              conversationId: _conversationId!,
+              message: "I'm having trouble connecting right now. Please try again later.",
+              isUser: false,
+              timestamp: DateTime.now(),
+            ),
           ));
         }
       });

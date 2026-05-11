@@ -30,7 +30,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
     
-    final user = await AuthService.getCurrentUser();
+    final user = await AuthService.getCurrentUser(forceRefresh: true);
     final bookings = await BookingService.getMyBookings();
     
     if (mounted) {
@@ -114,19 +114,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
-                        _buildStatItem('Reward\nPoints', '${_completedBookings.length * 100}'),
+                        _buildStatItem('Reward\nPoints', '${_user?.rewardPoints ?? 0}'),
                         Container(
                           width: 1,
                           height: 40,
                           color: AppColors.border,
                         ),
-                        _buildStatItem('Travel\nTrips', '${_completedBookings.length}'),
+                        _buildStatItem('Travel\nTrips', '${_user?.totalBookings ?? 0}'),
                         Container(
                           width: 1,
                           height: 40,
                           color: AppColors.border,
                         ),
-                        _buildStatItem('Favourites', '0'),
+                        _buildStatItem('Favourites', '${_user?.favoritesCount ?? 0}'),
                       ],
                     ),
                   ),

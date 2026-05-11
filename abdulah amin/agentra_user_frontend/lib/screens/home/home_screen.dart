@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_theme.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../widgets/bottom_nav_bar.dart';
 import '../../widgets/package_card.dart';
 import '../../models/package.dart';
@@ -96,7 +97,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     radius: 20,
                     backgroundColor: AppColors.primary,
                     backgroundImage: (_user?.profileImage != null && _user!.profileImage!.isNotEmpty)
-                        ? NetworkImage(_user!.profileImage!)
+                        ? CachedNetworkImageProvider(_user!.profileImage!)
                         : null,
                     child: (_user?.profileImage == null || _user!.profileImage!.isEmpty)
                         ? const Icon(Icons.person, color: Colors.white, size: 20)
@@ -201,9 +202,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                 duration: package.duration,
                                 price: 'PKR ${package.price}',
                                 description: package.description,
-                                rating: package.rating ?? 4.5,
+                                rating: package.rating ?? 0.0,
                                 showSaleBadge: package.hasDiscount == true && (package.discountPercentage ?? 0) > 0,
-                                discountPercentage: package.discountPercentage ?? 0,
+                                discountPercentage: package.discountPercentage ?? 0.0,
                                 package: package,
                                 onReviewTap: () {
     Navigator.pushNamed(

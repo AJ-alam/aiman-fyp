@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/custom_button.dart';
 import '../../models/booking.dart';
@@ -153,8 +154,8 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
                         image: (booking.packageImage != null &&
                                 booking.packageImage!.isNotEmpty)
                             ? DecorationImage(
-                                image:
-                                    NetworkImage(booking.packageImage!),
+                                image: CachedNetworkImageProvider(
+                                    booking.packageImage!),
                                 fit: BoxFit.cover,
                               )
                             : null,

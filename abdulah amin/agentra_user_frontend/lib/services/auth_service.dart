@@ -152,7 +152,8 @@ class AuthService {
     return _token;
   }
 
-  static Future<User?> getCurrentUser() async {
+  static Future<User?> getCurrentUser({bool forceRefresh = false}) async {
+    if (forceRefresh) _currentUser = null;
     if (_currentUser != null) return _currentUser;
     
     final token = await getToken();

@@ -1,38 +1,68 @@
-import 'package:shared_preferences/shared_preferences.dart';
-import '../models/package.dart';
 import 'dart:convert';
+import 'package:http/http.dart' as http;
+import '../config/api_config.dart';
+import '../models/package.dart';
+import 'auth_service.dart';
 
 class SavedPackagesService {
-  static const String _key = 'saved_packages';
-
   static Future<List<Package>> getSavedPackages() async {
-    final prefs = await SharedPreferences.getInstance();
-    final List<String> savedList = prefs.getStringList(_key) ?? [];
-    return savedList.map((e) => Package.fromJson(jsonDecode(e))).toList();
+    final token = await AuthService.getToken();
+    if (token == null) return [];
+
+    try {
+      final response = await http.get(
+        Uri.parse(ApiConfig.SAVED_PACKAGES),
+        headers: {
+          'Content-Type': 'application/json',
+          'x-auth-token': token,
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final List favorites = data['favorites'] ?? [];
+        return favorites.map((e) => Package.fromJson(e)).toList();
+      }
+    } catch (e) {
+      print('Get favorites error: $e');
+    }
+    return [];
   }
 
   static Future<bool> isPackageSaved(String packageId) async {
-    final prefs = await SharedPreferences.getInstance();
-    final List<String> savedList = prefs.getStringList(_key) ?? [];
-    return savedList.any((e) => jsonDecode(e)['_id'].toString() == packageId);
+    final favorites = await getSavedPackages();
+    return favorites.any((p) => p.id == packageId);
   }
 
   static Future<void> savePackage(Package package) async {
-    final prefs = await SharedPreferences.getInstance();
-    final List<String> savedList = prefs.getStringList(_key) ?? [];
-    final alreadySaved = savedList
-        .any((e) => jsonDecode(e)['_id'].toString() == package.id);
-    if (!alreadySaved) {
-      savedList.add(jsonEncode(package.toJson()));
-      await prefs.setStringList(_key, savedList);
-    }
+    await _toggleFavorite(package.id);
   }
 
   static Future<void> unsavePackage(String packageId) async {
-    final prefs = await SharedPreferences.getInstance();
-    final List<String> savedList = prefs.getStringList(_key) ?? [];
-    savedList.removeWhere(
-        (e) => jsonDecode(e)['_id'].toString() == packageId);
-    await prefs.setStringList(_key, savedList);
+    await _toggleFavorite(packageId);
+  }
+
+  static Future<bool> _toggleFavorite(String packageId) async {
+    final token = await AuthService.getToken();
+    if (token == null) return false;
+
+    try {
+      final response = await http.post(
+        Uri.parse(ApiConfig.TOGGLE_FAVORITE),
+        headers: {
+          'Content-Type': 'application/json',
+          'x-auth-token': token,
+        },
+        body: jsonEncode({'packageId': packageId}),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return data['success'] ?? false;
+      }
+    } catch (e) {
+      print('Toggle favorite error: $e');
+    }
+    return false;
   }
 }

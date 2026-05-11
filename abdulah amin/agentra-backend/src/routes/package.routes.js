@@ -11,6 +11,7 @@ router.get('/all/admin', protect, role('OWNER'), packageController.getAllPackage
 // Temporary cleanup route kept for maintenance, but never public.
 router.delete('/temp-cleanup', protect, role('OWNER'), packageController.cleanupPackages);
 
+router.get('/locations', packageController.getLocations);
 router.get('/:id', packageController.getPackageDetails);
 
 router.post('/', protect, role('AGENT'), packageController.createPackage);

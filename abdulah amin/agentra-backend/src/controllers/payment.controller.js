@@ -170,27 +170,9 @@ exports.getPaymentMethods = async (req, res) => {
   try {
     const paymentMethods = [
       {
-        id: 'card',
-        name: 'Credit/Debit Card',
-        icon: 'credit-card',
-        supported: true
-      },
-      {
         id: 'jazzcash',
         name: 'JazzCash',
         icon: 'mobile',
-        supported: true
-      },
-      {
-        id: 'easypaisa',
-        name: 'EasyPaisa',
-        icon: 'mobile',
-        supported: true
-      },
-      {
-        id: 'bank',
-        name: 'Bank Transfer',
-        icon: 'bank',
         supported: true
       }
     ];

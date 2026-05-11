@@ -18,7 +18,6 @@ class EditProfileScreen extends StatefulWidget {
 class _EditProfileScreenState extends State<EditProfileScreen> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _nameController;
-  late TextEditingController _bioController;
   late TextEditingController _locationController;
   late TextEditingController _contactController;
   bool _isLoading = true;
@@ -30,7 +29,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   void initState() {
     super.initState();
     _nameController = TextEditingController();
-    _bioController = TextEditingController();
     _locationController = TextEditingController();
     _contactController = TextEditingController();
     _loadUserData();
@@ -43,7 +41,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         _currentUser = user;
         if (user != null) {
           _nameController.text = user.fullName;
-          _bioController.text = user.bio ?? '';
           _contactController.text = user.phone ?? '';
           // Location isn't in User model yet, using placeholder or could add to model
           _locationController.text = 'Pakistan'; 
@@ -56,7 +53,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   @override
   void dispose() {
     _nameController.dispose();
-    _bioController.dispose();
     _locationController.dispose();
     _contactController.dispose();
     super.dispose();
@@ -69,7 +65,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       // Build update body — include profileImage if changed
       final updateBody = <String, dynamic>{
         'fullName': _nameController.text.trim(),
-        'bio': _bioController.text.trim(),
         'phone': _contactController.text.trim(),
       };
       if (_newProfileImageUrl != null) {
@@ -269,12 +264,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   controller: _nameController,
                   suffixIcon: _buildCheckIcon(),
                   validator: (val) => val == null || val.isEmpty ? 'Name cannot be empty' : null,
-                ),
-                const SizedBox(height: 20),
-                _buildFieldLabel('Bio'),
-                CustomInput(
-                  controller: _bioController,
-                  suffixIcon: _buildCheckIcon(),
                 ),
                 const SizedBox(height: 20),
                 _buildFieldLabel('Location'),

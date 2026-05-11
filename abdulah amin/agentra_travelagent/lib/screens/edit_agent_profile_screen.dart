@@ -30,7 +30,6 @@ class _EditAgentProfileScreenState extends State<EditAgentProfileScreen> {
 
   // Controllers
   late TextEditingController _businessNameController;
-  late TextEditingController _bioController;
   late TextEditingController _locationController;
   late TextEditingController _phoneController;
   late TextEditingController _emailController;
@@ -41,7 +40,6 @@ class _EditAgentProfileScreenState extends State<EditAgentProfileScreen> {
   void initState() {
     super.initState();
     _businessNameController = TextEditingController();
-    _bioController = TextEditingController();
     _locationController = TextEditingController();
     _phoneController = TextEditingController();
     _emailController = TextEditingController();
@@ -57,7 +55,6 @@ class _EditAgentProfileScreenState extends State<EditAgentProfileScreen> {
       setState(() {
         _agent = agent;
         _businessNameController.text = agent.businessName;
-        _bioController.text = agent.bio ?? '';
         _locationController.text = agent.location ?? '';
         _phoneController.text = agent.phone;
         _emailController.text = agent.email;
@@ -71,7 +68,6 @@ class _EditAgentProfileScreenState extends State<EditAgentProfileScreen> {
   @override
   void dispose() {
     _businessNameController.dispose();
-    _bioController.dispose();
     _locationController.dispose();
     _phoneController.dispose();
     _emailController.dispose();
@@ -107,7 +103,6 @@ class _EditAgentProfileScreenState extends State<EditAgentProfileScreen> {
 
     final result = await AuthService.updateProfile({
       'businessName': _businessNameController.text.trim(),
-      'bio': _bioController.text.trim(),
       'location': _locationController.text.trim(),
       'phone': _phoneController.text.trim(),
       'email': _emailController.text.trim(),

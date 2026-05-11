@@ -100,10 +100,13 @@ class _JazzCashPaymentScreenState extends State<JazzCashPaymentScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Center(
-                      child: Image.network(
-                        'https://upload.wikimedia.org/wikipedia/commons/b/b8/JazzCash_logo.png',
-                        height: 60,
-                        errorBuilder: (c, e, s) => const Icon(Icons.payment, size: 60),
+                      child: Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFC7011A).withOpacity(0.1),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(Icons.account_balance_wallet, size: 60, color: Color(0xFFC7011A)),
                       ),
                     ),
                     const SizedBox(height: 32),

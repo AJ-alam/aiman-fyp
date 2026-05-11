@@ -56,11 +56,33 @@ exports.updateComplaintStatus = async (req, res) => {
       message: "Complaint updated successfully"
     });
   } catch (error) {
-    console.error("❌ [ADMIN] Error updating complaint:", error.message);
+    console.error(" [ADMIN] Error updating complaint:", error.message);
     res.status(500).json({
       success: false,
       message: "Failed to update complaint",
       error: error.message
+    });
+  }
+};
+
+exports.getAgentComplaints = async (req, res) => {
+  try {
+    console.log(` [AGENT] Fetching complaints for agent: ${req.user.id}`);
+    const complaints = await Complaint.find({ agentId: req.user.id })
+      .populate('userId', 'fullName email')
+      .populate('bookingId')
+      .sort({ createdAt: -1 });
+
+    res.json({
+      success: true,
+      complaints,
+      count: complaints.length
+    });
+  } catch (error) {
+    console.error("❌ [AGENT] Error fetching complaints:", error.message);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch complaints"
     });
   }
 };

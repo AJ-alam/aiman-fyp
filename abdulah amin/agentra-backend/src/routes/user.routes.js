@@ -25,6 +25,10 @@ router.get('/complaints', protect, role('USER'), userController.getUserComplaint
 // ================= AI PREFERENCES =================
 router.put('/preferences', protect, role('USER'), userController.updatePreferences);
 
+// ================= FAVORITES =================
+router.post('/favorites/toggle', protect, role('USER'), userController.toggleFavorite);
+router.get('/favorites', protect, role('USER'), userController.getFavorites);
+
 // ================= ACCOUNT =================
 router.patch('/deactivate', protect, role('USER'), userController.deactivateAccount);
 

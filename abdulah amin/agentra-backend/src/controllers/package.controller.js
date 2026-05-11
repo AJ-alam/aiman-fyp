@@ -12,6 +12,15 @@ exports.getPublicPackages = async (req, res) => {
   }
 };
 
+exports.getLocations = async (req, res) => {
+  try {
+    const locations = await Package.distinct('location', { isActive: true });
+    res.json({ success: true, locations });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
 exports.getPackageDetails = async (req, res) => {
   try {
     const pkg = await Package.findById(req.params.id)

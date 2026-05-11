@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/bottom_nav_bar.dart';
 import '../../services/booking_service.dart';
@@ -245,7 +246,7 @@ class _BookingsScreenState extends State<BookingsScreen> {
                 borderRadius: BorderRadius.circular(8),
                 image: (booking.packageImage != null && booking.packageImage!.isNotEmpty)
                     ? DecorationImage(
-                        image: NetworkImage(booking.packageImage!),
+                        image: CachedNetworkImageProvider(booking.packageImage!),
                         fit: BoxFit.cover,
                       )
                     : null,

@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/star_rating.dart';
 import '../../models/package.dart';
 import '../../services/package_service.dart';
+import '../../config/api_config.dart';
 
 class PackageDetailScreen extends StatefulWidget {
   final String packageId;
@@ -73,7 +75,7 @@ class _PackageDetailScreenState extends State<PackageDetailScreen> {
               ),
               const SizedBox(height: 8),
               Text(
-                'Get ${(package.discountPercentage ?? 0).toInt()}% OFF on this adventure',
+                'Get ${package.discountPercentage?.toInt() ?? 0}% OFF on this adventure',
                 textAlign: TextAlign.center,
                 style: const TextStyle(
                   color: Colors.white,
@@ -156,19 +158,25 @@ class _PackageDetailScreenState extends State<PackageDetailScreen> {
                 // ── Hero Image ─────────────────────────────────────────
                 Stack(
                   children: [
-                    Container(
+                    SizedBox(
                       height: 320,
                       width: double.infinity,
-                      decoration: BoxDecoration(
-                        image: DecorationImage(
-                          image: NetworkImage(
-                            (pkg.image != null && pkg.image!.isNotEmpty)
-                                ? pkg.image!
-                                : (pkg.images != null && pkg.images!.isNotEmpty
-                                    ? pkg.images![0]
-                                    : 'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?q=80&w=1000'),
-                          ),
-                          fit: BoxFit.cover,
+                      child: CachedNetworkImage(
+                        imageUrl: ApiConfig.getImageUrl(
+                          (pkg.image != null && pkg.image!.isNotEmpty)
+                              ? pkg.image!
+                              : (pkg.images != null && pkg.images!.isNotEmpty
+                                  ? pkg.images![0]
+                                  : null),
+                        ),
+                        fit: BoxFit.cover,
+                        placeholder: (context, url) => Container(
+                          color: AppColors.backgroundGray,
+                          child: const Center(child: CircularProgressIndicator()),
+                        ),
+                        errorWidget: (context, url, error) => Container(
+                          color: AppColors.backgroundGray,
+                          child: const Icon(Icons.broken_image, color: Colors.grey),
                         ),
                       ),
                     ),
@@ -197,8 +205,8 @@ class _PackageDetailScreenState extends State<PackageDetailScreen> {
                                 Colors.black),
                           if (pkg.isFeatured == true && hasDiscount)
                             const SizedBox(width: 8),
-                          if (hasDiscount)
-                            _badge('🔥 $discountPct% OFF',
+                          if (hasDiscount && discountPct > 0)
+                            _badge('🔥 ${discountPct.toInt()}% OFF',
                                 const Color(0xFFff416c), const Color(0xFFff4b2b),
                                 Colors.white),
                         ],

@@ -25,6 +25,7 @@ class ApiConfig {
   
   // ===== PACKAGE ENDPOINTS =====
   static const String PACKAGES = '$BASE_URL/packages';
+  static const String PACKAGE_LOCATIONS = '$BASE_URL/packages/locations';
   static const String SEARCH = '$BASE_URL/search';
   static const String PROMOTIONS = '$BASE_URL/promotion';
   static String packageDetail(String id) => '$BASE_URL/packages/$id';
@@ -62,8 +63,8 @@ class ApiConfig {
   static String chatbotHistory(String conversationId) => '$BASE_URL/chatbot/$conversationId';
   
   // ===== SAVED PACKAGES ENDPOINTS =====
-  static const String SAVED_PACKAGES = '$BASE_URL/saved';
-  static String savedPackage(String id) => '$BASE_URL/saved/$id';
+  static const String SAVED_PACKAGES = '$BASE_URL/favorites';
+  static const String TOGGLE_FAVORITE = '$BASE_URL/favorites/toggle';
   
   // ===== AGENT ENDPOINTS (BONUS) =====
   static const String AGENT_DASHBOARD = '$BASE_URL/dashboard/agent';
