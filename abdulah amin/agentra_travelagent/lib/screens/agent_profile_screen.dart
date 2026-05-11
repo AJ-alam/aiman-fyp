@@ -194,19 +194,6 @@ class _AgentProfileScreenState extends State<AgentProfileScreen> {
                                                 color: Color(0xFF7D848D),
                                               ),
                                             ),
-                                            if (_agent!.bio != null &&
-                                                _agent!.bio!.isNotEmpty) ...[
-                                              const SizedBox(height: 12),
-                                              Text(
-                                                _agent!.bio!,
-                                                textAlign: TextAlign.center,
-                                                style: const TextStyle(
-                                                  fontSize: 14,
-                                                  color: Color(0xFF4A4A4A),
-                                                  height: 1.6,
-                                                ),
-                                              ),
-                                            ],
                                             const SizedBox(height: 32),
                                             // Stats row
                                             Container(

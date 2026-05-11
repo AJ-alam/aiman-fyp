@@ -182,7 +182,6 @@ class AuthService {
 
   static Future<bool> updateProfile({
     required String fullName,
-    required String bio,
     required String phone,
   }) async {
     final token = await getToken();
@@ -197,7 +196,6 @@ class AuthService {
         },
         body: jsonEncode({
           'fullName': fullName,
-          'bio': bio,
           'phone': phone,
         }),
       );

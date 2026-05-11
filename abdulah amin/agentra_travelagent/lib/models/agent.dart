@@ -6,7 +6,6 @@ class Agent {
   final String phone;
   final String cnic;
   final String? profileImage;
-  final String? bio;
   final String? location;
   final String? refundPolicy;
   final String? cancellationPolicy;
@@ -31,7 +30,6 @@ class Agent {
     required this.phone,
     required this.cnic,
     this.profileImage,
-    this.bio,
     this.location,
     this.refundPolicy,
     this.cancellationPolicy,
@@ -62,7 +60,6 @@ class Agent {
       phone: json['phone'] ?? '',
       cnic: json['cnic'] ?? '',
       profileImage: json['profileImage'],
-      bio: json['bio'],
       location: json['location'],
       refundPolicy: json['refundPolicy'],
       cancellationPolicy: json['cancellationPolicy'],
@@ -89,7 +86,6 @@ class Agent {
       'phone': phone,
       'cnic': cnic,
       'profileImage': profileImage,
-      'bio': bio,
       'location': location,
       'refundPolicy': refundPolicy,
       'cancellationPolicy': cancellationPolicy,

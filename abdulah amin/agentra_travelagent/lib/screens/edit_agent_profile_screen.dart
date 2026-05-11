@@ -308,13 +308,6 @@ class _EditAgentProfileScreenState extends State<EditAgentProfileScreen> {
                                         ),
                                         const SizedBox(height: 20),
                                         CustomInput(
-                                          label: 'Bio',
-                                          controller: _bioController,
-                                          hint: 'Tell clients about yourself...',
-                                          maxLines: 3,
-                                        ),
-                                        const SizedBox(height: 20),
-                                        CustomInput(
                                           label: 'Location',
                                           controller: _locationController,
                                           hint: 'e.g., Rawalpindi, Pakistan',
