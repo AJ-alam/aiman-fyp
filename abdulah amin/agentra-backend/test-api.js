@@ -38,6 +38,10 @@ const generateUniqueEmail = (prefix) => {
   return `${prefix}${timestamp}@example.com`;
 };
 
+const generateUniquePhone = () => {
+  return Math.floor(1000000000 + Math.random() * 9000000000).toString();
+};
+
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 const testEndpoint = async (method, endpoint, data = null, token = null, description = '') => {
@@ -89,7 +93,7 @@ const runTests = async () => {
     fullName: 'Test User',
     email: userEmail,
     password: 'password123',
-    phone: '1234567890'
+    phone: generateUniquePhone()
   }, null, 'Register User');
 
   if (userRegister.success) {
@@ -109,9 +113,9 @@ const runTests = async () => {
     fullName: 'Test Agent',
     email: agentEmail,
     password: 'password123',
-    phone: '0987654321',
+    phone: generateUniquePhone(),
     businessName: 'Test Travel Agency',
-    cnic: '1234567890123'
+    cnic: generateUniquePhone() + '1'
   }, null, 'Register Agent');
 
   if (agentRegister.success) {
@@ -129,6 +133,16 @@ const runTests = async () => {
 
     await testEndpoint('POST', '/auth/user/logout', {}, userToken, 'Logout User');
     await testEndpoint('POST', '/auth/agent/logout', {}, agentToken, 'Logout Agent');
+
+    logSection('1.1 ADMIN AUTHENTICATION TESTS');
+    const adminLogin = await testEndpoint('POST', '/auth/owner/login', {
+      email: 'admin@agentra.com',
+      password: 'adminpassword'
+    }, null, 'Login Admin');
+
+    if (adminLogin.success) {
+      ownerToken = adminLogin.data.token;
+    }
 
     log('\n⚠️  Note: Agent login failed because account needs admin verification (by design)\n', 'yellow');
 
