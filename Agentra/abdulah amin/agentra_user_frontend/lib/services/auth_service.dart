@@ -28,9 +28,6 @@ class AuthService {
         }),
       );
 
-      print(' Register Status: ${response.statusCode}');
-      print(' Register Body: ${response.body}');
-
       final data = jsonDecode(response.body);
 
       if (response.statusCode == 200 || response.statusCode == 201) {
@@ -58,8 +55,6 @@ class AuthService {
     required String businessName,
   }) async {
     try {
-      print(' Registering Agent: $email');
-      
       final response = await http.post(
         Uri.parse(ApiConfig.AGENT_REGISTER),
         headers: {'Content-Type': 'application/json'},
@@ -72,8 +67,6 @@ class AuthService {
         }),
       );
 
-      print(' Agent Register Status: ${response.statusCode}');
-      
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = jsonDecode(response.body);
         _token = data['token'];
@@ -89,40 +82,38 @@ class AuthService {
     }
   }
 
-  static Future<bool> login({
+  static Future<Map<String, dynamic>> login({
     required String email,
     required String password,
     bool isAgent = false,
   }) async {
     try {
-      print(' Logging in (${isAgent ? 'Agent' : 'User'}): $email');
-      
       final url = isAgent ? ApiConfig.AGENT_LOGIN : ApiConfig.USER_LOGIN;
       
       final response = await http.post(
         Uri.parse(url),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          'email': email,
+          'email': email.trim().toLowerCase(),
           'password': password,
         }),
       );
 
-      print(' Login Status: ${response.statusCode}');
-      print(' Login Body: ${response.body}');
+      final data = jsonDecode(response.body);
 
       if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
         _token = data['token'];
         if (_token != null) {
           await _saveToken(_token!);
-          return true;
+          return {'success': true};
         }
       }
-      return false;
+      return {
+        'success': false,
+        'message': data['message'] ?? 'Login failed'
+      };
     } catch (e) {
-      print(' Login error: $e');
-      return false;
+      return {'success': false, 'message': 'Connection error: $e'};
     }
   }
 
@@ -145,7 +136,8 @@ class AuthService {
     return _token;
   }
 
-  static Future<User?> getCurrentUser() async {
+  static Future<User?> getCurrentUser({bool forceRefresh = false}) async {
+    if (forceRefresh) _currentUser = null;
     if (_currentUser != null) return _currentUser;
     
     final token = await getToken();
@@ -156,11 +148,10 @@ class AuthService {
         Uri.parse(ApiConfig.USER_PROFILE),
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
+          'x-auth-token': token,
         },
       );
 
-      print(' Get user Status: ${response.statusCode}');
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         _currentUser = User.fromJson(data['user']);
@@ -174,7 +165,6 @@ class AuthService {
 
   static Future<bool> updateProfile({
     required String fullName,
-    required String bio,
     required String phone,
   }) async {
     final token = await getToken();
@@ -185,17 +175,13 @@ class AuthService {
         Uri.parse(ApiConfig.UPDATE_PROFILE),
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
+          'x-auth-token': token,
         },
         body: jsonEncode({
           'fullName': fullName,
-          'bio': bio,
           'phone': phone,
         }),
       );
-
-      print(' Update Profile Status: ${response.statusCode}');
-      print(' Update Profile Body: ${response.body}');
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -211,5 +197,9 @@ class AuthService {
 
   static bool isLoggedIn() {
     return _token != null;
+  }
+
+  static void clearCache() {
+    _currentUser = null;
   }
 }

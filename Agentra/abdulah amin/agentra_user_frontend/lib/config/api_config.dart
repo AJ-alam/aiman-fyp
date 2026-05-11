@@ -1,12 +1,16 @@
 class ApiConfig {
   // Base URL - Change based on your device
   // 1. LIVE CLOUD URL (For production/deployed backend)
-  static const String BASE_URL = 'https://agentra-backend.vercel.app/api';
+  // static const String BASE_URL = 'https://agentra-backend.vercel.app/api';
+  static const String BASE_URL = 'http://localhost:5000/api'; 
+  static const String SERVER_URL = 'http://localhost:5000';
 
-  // 2. LOCAL BACKEND URL (Use this if you are running the backend locally)
-  // static const String BASE_URL = 'http://localhost:5000/api'; // For Web/iOS
-  // static const String BASE_URL = 'http://10.0.2.2:5000/api';  // For Android Emulator
-  // static const String BASE_URL = 'http://192.168.x.x:5000/api'; // For Physical Device (Use your IP)
+  static String getImageUrl(String? path) {
+    if (path == null || path.isEmpty) return 'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?q=80\u0026w=1000';
+    if (path.startsWith('http')) return path;
+    if (path.startsWith('/')) return '$SERVER_URL$path';
+    return '$SERVER_URL/$path';
+  }
   
   // ===== AUTH ENDPOINTS =====
   static const String USER_REGISTER = '$BASE_URL/auth/user/register';
@@ -17,6 +21,7 @@ class ApiConfig {
   
   // ===== PACKAGE ENDPOINTS =====
   static const String PACKAGES = '$BASE_URL/packages';
+  static const String PACKAGE_LOCATIONS = '$BASE_URL/packages/locations';
   static const String SEARCH = '$BASE_URL/search';
   static const String PROMOTIONS = '$BASE_URL/promotion';
   static String packageDetail(String id) => '$BASE_URL/packages/$id';
@@ -30,8 +35,6 @@ class ApiConfig {
   static const String USER_PROFILE = '$BASE_URL/users/profile';
   static const String UPDATE_PROFILE = '$BASE_URL/users/profile';
   static const String USER_PREFERENCES = '$BASE_URL/users/preferences';
-  static const String USER_REWARDS = '$BASE_URL/users/rewards';
-  static const String USER_COMPLETED_TRIPS = '$BASE_URL/users/completed-trips';
   
   // ===== PAYMENT ENDPOINTS =====
   static const String PAYMENT_METHODS = '$BASE_URL/payments/methods';
@@ -56,13 +59,9 @@ class ApiConfig {
   static String chatbotHistory(String conversationId) => '$BASE_URL/chatbot/$conversationId';
   
   // ===== SAVED PACKAGES ENDPOINTS =====
-  static const String SAVED_PACKAGES = '$BASE_URL/saved';
-  static String savedPackage(String id) => '$BASE_URL/saved/$id';
+  static const String SAVED_PACKAGES = '$BASE_URL/favorites';
+  static const String TOGGLE_FAVORITE = '$BASE_URL/favorites/toggle';
   
-  // ===== REFUND ENDPOINTS =====
-  static const String MY_REFUNDS = '$BASE_URL/refund/my';
-  static const String REQUEST_REFUND = '$BASE_URL/refund/request';
-
   // ===== AGENT ENDPOINTS (BONUS) =====
   static const String AGENT_DASHBOARD = '$BASE_URL/dashboard/agent';
   static const String AGENT_ANALYTICS = '$BASE_URL/analytics/agent';
