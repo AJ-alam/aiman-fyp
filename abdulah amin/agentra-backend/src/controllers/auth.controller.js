@@ -134,6 +134,7 @@ const loginAgent = async (req, res) => {
     }
 
     if (agent.status === 'PENDING_APPROVAL') {
+      console.log(`⚠️ [LOGIN] Agent ${email} blocked: Status is PENDING_APPROVAL`);
       return res.status(403).json({
         success: false,
         message: 'Your account is not yet approved by admin.',
@@ -268,6 +269,7 @@ const getPendingAgents = async (req, res) => {
       .sort({ createdAt: -1 });
 
     console.log(`✅ Found ${agents.length} pending agents`);
+    console.log('PENDING IDS:', agents.map(a => a._id));
     res.status(200).json({
       success: true,
       count: agents.length,
@@ -312,13 +314,23 @@ const approveAgent = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Not in pending state' });
     }
 
-    agent.status = 'APPROVED';
-    agent.isVerified = true;
-    agent.emailVerified = true;
-    await agent.save();
+    const updatedAgent = await Agent.findByIdAndUpdate(
+      req.params.agentId,
+      { 
+        status: 'APPROVED', 
+        isVerified: true, 
+        emailVerified: true 
+      },
+      { new: true }
+    );
 
-    console.log('DATA SAVED:', agent);
-    const { password: _, ...data } = agent.toObject();
+    if (!updatedAgent) {
+      console.error('❌ APPROVE AGENT: Failed to update agent in DB');
+      return res.status(500).json({ success: false, message: 'Failed to update agent status' });
+    }
+
+    console.log('✅ AGENT APPROVED AND SAVED:', updatedAgent.email, 'Status:', updatedAgent.status);
+    const { password: _, ...data } = updatedAgent.toObject();
 
     res.status(200).json({
       success: true,
@@ -348,12 +360,23 @@ const rejectAgent = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Not in pending state' });
     }
 
-    agent.status = 'REJECTED';
-    agent.rejectionReason = reason || '';
-    await agent.save();
+    const updatedAgent = await Agent.findByIdAndUpdate(
+      req.params.agentId,
+      { 
+        status: 'REJECTED', 
+        rejectionReason: reason || 'Rejected by Admin',
+        isVerified: false
+      },
+      { new: true }
+    );
 
-    console.log('DATA SAVED:', agent);
-    const { password: _, ...data } = agent.toObject();
+    if (!updatedAgent) {
+      console.error('❌ REJECT AGENT: Failed to update agent in DB');
+      return res.status(500).json({ success: false, message: 'Failed to update agent status' });
+    }
+
+    console.log('✅ AGENT REJECTED AND SAVED:', updatedAgent.email, 'Status:', updatedAgent.status);
+    const { password: _, ...data } = updatedAgent.toObject();
 
     res.status(200).json({
       success: true,

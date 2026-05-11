@@ -119,6 +119,10 @@ static Future<Map<String, dynamic>> getOwnerDashboard() async {
           'x-auth-token': token,
         },
       );
+      if (response.statusCode != 200) {
+        print('Verify agent failed with status: ${response.statusCode}');
+        print('Response: ${response.body}');
+      }
       return response.statusCode == 200;
     } catch (e) {
       print('Verify agent error: $e');
